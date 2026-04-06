@@ -8,6 +8,7 @@ import EmailConfirmation from './screens/emailConfirmation';
 import EmailConfirmationPending from './screens/emailConfirmationPending';
 import EnterOtp from './screens/enterOtp';
 import ChangePassword from './screens/changePassword';
+import SettingScreen from './screens/settingScreen';
 const App = () => {
   return (
     <Routes>
@@ -17,6 +18,7 @@ const App = () => {
       <Route path="/register" element={<RegisterScreen />} />
       <Route path="/confirm-email" element={<EmailConfirmation />} />
       <Route path="/confirmation-pending" element={<EmailConfirmationPending />} />
+      <Route path="/settings" element={<SettingScreen />} />
       <Route path="/EnterOTP" element={<EnterOtp />} />
       <Route path="/changePassword" element={<ChangePassword />} />
       <Route path="/" element={<LoginScreen />} />

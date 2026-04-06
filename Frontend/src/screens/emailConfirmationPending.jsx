@@ -1,10 +1,17 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 const EmailConfirmationPending = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const email = location.state?.email || 'your email';
+
+  useEffect(() => {
+    if (searchParams.get('confirmed') === 'true') {
+      navigate('/login');
+    }
+  }, [searchParams, navigate]);
 
   return (
     <div className="login-container">
