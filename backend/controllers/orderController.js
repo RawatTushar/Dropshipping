@@ -1,4 +1,17 @@
 const Order = require("../models/Order");
+const Product = require("../models/Product");
+
+const rollbackStock = async (changes) => {
+  if (!changes.length) return;
+
+  await Promise.all(
+    changes.map((change) =>
+      Product.findByIdAndUpdate(change.productId, {
+        $inc: { countInStock: change.qty },
+      })
+    )
+  );
+};
 
 const addOrderItems = async (req, res) => {
   try {
@@ -14,6 +27,47 @@ const addOrderItems = async (req, res) => {
     if (!orderItems?.length) {
       return res.status(400).json({ message: "No order items" });
     }
+
+    // Merge duplicate product rows to avoid double-updating stock for same product.
+    const mergedItems = new Map();
+    for (const item of orderItems) {
+      const productId = String(item.product || "");
+      const qty = Number(item.qty || 0);
+      if (!productId || qty < 1) {
+        return res.status(400).json({ message: "Invalid order item payload" });
+      }
+
+      const existing = mergedItems.get(productId);
+      mergedItems.set(productId, {
+        productId,
+        qty: Number((existing?.qty || 0) + qty),
+        name: item.name || existing?.name || "Product",
+      });
+    }
+
+    const reservedChanges = [];
+    for (const merged of mergedItems.values()) {
+      const updated = await Product.findOneAndUpdate(
+        {
+          _id: merged.productId,
+          countInStock: { $gte: merged.qty },
+        },
+        {
+          $inc: { countInStock: -merged.qty },
+        },
+        { new: true }
+      );
+
+      if (!updated) {
+        await rollbackStock(reservedChanges);
+        return res.status(400).json({
+          message: `Insufficient stock for ${merged.name}. Please refresh products and try again.`,
+        });
+      }
+
+      reservedChanges.push({ productId: merged.productId, qty: merged.qty });
+    }
+
     const order = new Order({
       user: req.user._id,
       orderItems,
@@ -24,7 +78,15 @@ const addOrderItems = async (req, res) => {
       shippingPrice,
       totalPrice,
     });
-    const created = await order.save();
+
+    let created;
+    try {
+      created = await order.save();
+    } catch (saveErr) {
+      await rollbackStock(reservedChanges);
+      throw saveErr;
+    }
+
     res.status(201).json(created);
   } catch (err) {
     res.status(400).json({ message: err.message });

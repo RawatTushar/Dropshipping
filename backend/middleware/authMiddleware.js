@@ -28,4 +28,21 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+/** Attaches `req.user` when a valid Bearer token is present; otherwise continues as guest. */
+const optionalAuth = async (req, res, next) => {
+  req.user = null;
+  if (!req.headers.authorization?.startsWith("Bearer ")) {
+    return next();
+  }
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    if (user) req.user = user;
+  } catch {
+    /* invalid or expired token — treat as guest */
+  }
+  next();
+};
+
+module.exports = { protect, admin, optionalAuth };

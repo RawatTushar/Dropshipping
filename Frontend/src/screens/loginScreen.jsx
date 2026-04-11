@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
 import { persistUserSession } from '../utils/authSession';
+import { setCredentials } from '../features/auth/authSlice';
 import '../login.css';
 import { Link } from 'react-router-dom';
 import HideAndShow from '../components/hideAndShow';
@@ -9,6 +11,7 @@ import SaveButton from '../components/saveButton';
 import CustomInput from '../components/customInput';
 
 const Login = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -47,8 +50,9 @@ const Login = () => {
         return;
       }
 
-      const { token, name, email, isAdmin } = response.data;
-      persistUserSession({ token, name, email, isAdmin });
+      const { token, _id, name, email, isAdmin } = response.data;
+      persistUserSession({ token, _id, name, email, isAdmin });
+      dispatch(setCredentials({ token, _id, name, email, isAdmin }));
       navigate('/home');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

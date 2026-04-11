@@ -11,6 +11,21 @@ const userSchema = new mongoose.Schema(
     emailConfirmationExpires: { type: Date },
     loginOtpHash: { type: String },
     loginOtpExpires: { type: Date },
+    /** Per-user catalog signals for personalized recommendations (capped in controller). */
+    productSignals: {
+      recentlyViewed: [
+        {
+          product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+          at: { type: Date, default: Date.now },
+        },
+      ],
+      cartAdds: [
+        {
+          product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+          at: { type: Date, default: Date.now },
+        },
+      ],
+    },
   },
   { timestamps: true }
 );

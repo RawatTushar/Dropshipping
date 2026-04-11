@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
+import { setCredentials } from '../features/auth/authSlice';
+import { persistUserSession } from '../utils/authSession';
 import '../login.css';
 import SaveButton from '../components/saveButton';
 import CustomInput from '../components/customInput';
 
 const LoginOTP = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [step, setStep] = useState('email'); // 'email' or 'otp'
   const [email, setEmail] = useState('');
@@ -50,10 +54,9 @@ const LoginOTP = () => {
     try {
       // Call API to verify OTP
       const response = await authAPI.verifyOTP({ email, otp });
-      const { token } = response.data;
-
-      // Store token in localStorage
-      localStorage.setItem('token', token);
+      const { token, _id, name, email: accountEmail, isAdmin } = response.data;
+      persistUserSession({ token, _id, name, email: accountEmail, isAdmin });
+      dispatch(setCredentials({ token, _id, name, email: accountEmail, isAdmin }));
       navigate('/home');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP. Please try again.');

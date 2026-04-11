@@ -1,10 +1,10 @@
 .topbar {
   width: 100%;
   padding: 24px 28px;
-  background: linear-gradient(135deg, #5563de 0%, #8a4ef9 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   color: rgba(255, 255, 255, 0.98);
   border-radius: 0 0 30px 30px;
-  box-shadow: 0 18px 50px rgba(58, 50, 112, 0.16);
+  box-shadow: 0 18px 50px rgba(37, 99, 235, 0.22);
   margin-bottom: 32px;
   position: sticky;
   top: 0;

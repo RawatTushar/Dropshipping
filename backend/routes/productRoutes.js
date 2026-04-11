@@ -7,9 +7,15 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController");
-const { protect, admin } = require("../middleware/authMiddleware");
+const {
+  getRecommendations,
+  recordInteraction,
+} = require("../controllers/recommendationController");
+const { protect, admin, optionalAuth } = require("../middleware/authMiddleware");
 
 router.route("/").get(getProducts).post(protect, admin, createProduct);
+router.get("/:id/recommendations", optionalAuth, getRecommendations);
+router.post("/:id/interaction", optionalAuth, recordInteraction);
 router
   .route("/:id")
   .get(getProductById)

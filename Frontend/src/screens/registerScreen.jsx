@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
+import { setCredentials } from '../features/auth/authSlice';
+import { persistUserSession } from '../utils/authSession';
 import '../login.css';
 // import '../screens/login.css';
 import HideAndShow from '../components/hideAndShow';
@@ -9,6 +12,7 @@ import CustomInput from '../components/customInput';
 import validatePassword from '../components/validatePassword';
 import PasswordFields from '../components/passwordFields';
 const Register = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -66,8 +70,9 @@ const Register = () => {
       }
 
       // Fallback for direct registration (if email confirmation is disabled)
-      const { token, name, isAdmin } = response.data;
-      localStorage.setItem('token', token);
+      const { token, _id, name, email, isAdmin } = response.data;
+      persistUserSession({ token, _id, name, email, isAdmin });
+      dispatch(setCredentials({ token, _id, name, email, isAdmin }));
       navigate('/home');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');

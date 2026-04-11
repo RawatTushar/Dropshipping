@@ -1,229 +1,263 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import '../login.css';
+import { useDispatch, useSelector } from 'react-redux';
+import DashboardLayout from '../components/DashboardLayout';
+import { selectAuthUser, selectCurrentUserId, setCredentials } from '../features/auth/authSlice';
+import {
+  selectCurrentCurrency,
+  setCurrencyForUser,
+} from '../features/preferences/currencySlice';
+import '../settingScreen.css';
+import {
+  DEFAULT_STORE_NAME,
+  readSavedStoreName,
+  storeNameStorageKey,
+} from '../utils/storePreferences';
 
-const menuItems = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'myprofile', label: 'My Profile' },
-  { key: 'settings', label: 'Settings' },
-  { key: 'changePassword', label: 'Change Password' },
-  { key: 'summary', label: 'Summary' },
-  { key: 'orders', label: 'Your Orders' },
-  { key: 'cart', label: 'My Cart' },
-  { key: 'theme', label: 'Theme Change' },
-  { key: 'signout', label: 'Sign Out' },
+const tabs = [
+  { id: 'profile', label: 'My Details' },
+  { id: 'storeSetup', label: 'Store Setup' },
+  { id: 'suppliers', label: 'Suppliers' },
+  { id: 'security', label: 'Security' },
+  { id: 'notifications', label: 'Notifications' },
 ];
 
 const SettingScreen = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [theme, setTheme] = useState('light');
+  const userId = useSelector(selectCurrentUserId);
+  const authUser = useSelector(selectAuthUser);
+  const selectedCurrency = useSelector(selectCurrentCurrency);
+  const [currency, setCurrency] = useState(selectedCurrency);
+  const [storeName, setStoreName] = useState('');
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [savedMessage, setSavedMessage] = useState('');
 
-  const section = searchParams.get('section') || 'overview';
-  const userName = localStorage.getItem('userName') || 'User';
-  const userEmail = localStorage.getItem('userEmail') || 'email@example.com';
+  useEffect(() => {
+    setCurrency(selectedCurrency);
+  }, [selectedCurrency]);
 
-  const handleSelect = (key) => {
-    if (key === 'signout') {
-      localStorage.clear();
-      navigate('/login');
-      return;
-    }
+  useEffect(() => {
+    setStoreName(readSavedStoreName(userId));
+  }, [userId]);
 
-    if (key === 'changePassword') {
-      setSearchParams({ section: key });
-      return;
-    }
+  useEffect(() => {
+    setProfileName(authUser?.name || localStorage.getItem('userName') || 'User');
+    setProfileEmail(authUser?.email || localStorage.getItem('userEmail') || 'user@dropship.co');
+  }, [authUser]);
 
-    setSearchParams({ section: key });
+  const currentTab = searchParams.get('tab') || 'storeSetup';
+
+  const handleTabChange = (id) => {
+    setSearchParams({ tab: id });
+    setSavedMessage('');
   };
 
-  const toggleTheme = () => {
-    setTheme((current) => (current === 'light' ? 'dark' : 'light'));
+  const handleSaveChanges = () => {
+    dispatch(setCurrencyForUser({ userId, currency }));
+    localStorage.setItem(storeNameStorageKey(userId), storeName.trim() || DEFAULT_STORE_NAME);
+    window.dispatchEvent(new Event('shipit-store-prefs'));
+
+    if (authUser?.token) {
+      dispatch(
+        setCredentials({
+          token: authUser.token,
+          _id: authUser._id,
+          name: profileName.trim() || authUser.name,
+          email: profileEmail.trim() || authUser.email,
+          isAdmin: authUser.isAdmin,
+        }),
+      );
+      setSavedMessage('Profile, storefront name, and currency saved.');
+    } else {
+      setSavedMessage('Storefront name and currency saved. Sign in to update your profile.');
+    }
   };
 
-  const sectionContent = useMemo(() => {
-    switch (section) {
-      case 'myprofile':
+  const showSaveBar = currentTab === 'storeSetup' || currentTab === 'profile';
+
+  const renderContent = () => {
+    switch(currentTab) {
+      case 'profile':
         return (
-          <>
-            <h2>My Profile</h2>
-            <p>Manage your personal information and account contact details.</p>
-            <div className="profile-card">
-              <div>
-                <strong>Name</strong>
-                <p>{userName}</p>
+          <div className="tab-pane animate-fade-in delay-100">
+            <h3>Personal Information</h3>
+            <p className="subtitle">Update your personal details and public profile.</p>
+            
+            <div className="form-grid">
+              <div className="input-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  className="premium-input"
+                  value={profileName}
+                  onChange={(e) => {
+                    setProfileName(e.target.value);
+                    setSavedMessage('');
+                  }}
+                />
               </div>
-              <div>
-                <strong>Email</strong>
-                <p>{userEmail}</p>
-              </div>
-              <div>
-                <strong>Account Status</strong>
-                <p>Active</p>
+              <div className="input-group">
+                <label>Contact Email</label>
+                <input
+                  type="email"
+                  className="premium-input"
+                  value={profileEmail}
+                  onChange={(e) => {
+                    setProfileEmail(e.target.value);
+                    setSavedMessage('');
+                  }}
+                />
               </div>
             </div>
-          </>
+            <p className="settings-hint mt-24">
+              <strong>Save changes</strong> below updates your name and/or email together with your storefront name and currency in one step (change only what you need).
+            </p>
+          </div>
         );
-      case 'settings':
+        
+      case 'storeSetup':
         return (
-          <>
-            <h2>Settings</h2>
-            <p>Update your preferences, notification settings, and display options.</p>
-            <div className="panel-grid">
-              <div className="panel-card">
-                <h3>Account Preferences</h3>
-                <p>Customize how the application behaves and what you see on screen.</p>
+          <div className="tab-pane animate-fade-in delay-100">
+            <h3>Store Information</h3>
+            <p className="subtitle">Manage your dropshipping store details and preferences.</p>
+            
+            <div className="form-group mb-32">
+              <label htmlFor="settings-store-display-name">{DEFAULT_STORE_NAME}</label>
+              <input
+                id="settings-store-display-name"
+                type="text"
+                className="premium-input"
+                value={storeName}
+                onChange={(e) => {
+                  setStoreName(e.target.value);
+                  setSavedMessage('');
+                }}
+              />
+              <span className="input-hint">This will be displayed on your storefront and invoices.</span>
+            </div>
+
+            <div className="form-group mb-32">
+              <label>Primary Currency</label>
+              <select
+                className="premium-input"
+                value={currency}
+                onChange={(e) => {
+                  setCurrency(e.target.value);
+                  setSavedMessage('');
+                }}
+              >
+                <option value="USD">USD ($) - United States Dollar</option>
+                <option value="EUR">EUR (€) - Euro</option>
+                <option value="GBP">GBP (£) - British Pound</option>
+                <option value="INR">INR (₹) - Indian Rupee</option>
+              </select>
+            </div>
+
+            <p className="settings-hint mb-32">
+              Edit your storefront name and/or currency here; <strong>Save changes</strong> below also keeps your profile in sync if you are signed in.
+            </p>
+
+            <div className="settings-card">
+              <div className="settings-card-text">
+                <strong>Custom Domain</strong>
+                <span>Connect a custom domain to your store.</span>
               </div>
-              <div className="panel-card">
-                <h3>Notification Settings</h3>
-                <p>Enable or disable email updates and order alerts.</p>
+              <button className="btn-outline">Add Domain</button>
+            </div>
+          </div>
+        );
+
+      case 'suppliers':
+        return (
+          <div className="tab-pane animate-fade-in delay-100">
+            <h3>Supplier Integrations</h3>
+            <p className="subtitle">Manage connections to your dropshipping suppliers.</p>
+
+            <div className="integration-list">
+              <div className="integration-item">
+                <div className="integration-info">
+                  <div className="icon-box bg-purple">AE</div>
+                  <div>
+                    <strong>AliExpress Sync</strong>
+                    <span>Status: <span className="text-success">Connected</span></span>
+                  </div>
+                </div>
+                <button className="btn-icon">⚙️</button>
+              </div>
+
+              <div className="integration-item">
+                <div className="integration-info">
+                  <div className="icon-box bg-orange">CJ</div>
+                  <div>
+                    <strong>CJ Dropshipping</strong>
+                    <span>Status: <span className="text-warning">Action Required</span></span>
+                  </div>
+                </div>
+                <button className="btn-icon">⚙️</button>
               </div>
             </div>
-          </>
+          </div>
         );
-      case 'changePassword':
+        
+      case 'security':
         return (
-          <>
-            <h2>Change Password</h2>
-            <p>Protect your account by updating your password regularly.</p>
-            <button type="button" className="login-btn" onClick={() => navigate('/changePassword')}>
-              Go to Change Password Screen
-            </button>
-          </>
-        );
-      case 'summary':
-        return (
-          <>
-            <h2>Summary</h2>
-            <p>Your latest activity and order insights in one place.</p>
-            <div className="summary-grid">
-              <div className="summary-card">
-                <span>5</span>
-                <p>Open Orders</p>
+          <div className="tab-pane animate-fade-in delay-100">
+            <h3>Password & Security</h3>
+            <p className="subtitle">Keep your account secure.</p>
+            <div className="settings-card">
+              <div className="settings-card-text">
+                <strong>Change Password</strong>
+                <span>Update your password regularly to keep your account secure.</span>
               </div>
-              <div className="summary-card">
-                <span>12</span>
-                <p>Items in Cart</p>
-              </div>
-              <div className="summary-card">
-                <span>$2,400</span>
-                <p>Monthly Revenue</p>
-              </div>
+              <button className="btn-outline" onClick={() => navigate('/changePassword')}>Update</button>
             </div>
-          </>
+          </div>
         );
-      case 'orders':
-        return (
-          <>
-            <h2>Your Orders</h2>
-            <p>Review the status of current and recent orders.</p>
-            <div className="table-placeholder">
-              <div className="table-row header">
-                <span>Order</span>
-                <span>Date</span>
-                <span>Status</span>
-                <span>Total</span>
-              </div>
-              <div className="table-row">
-                <span>#1045</span>
-                <span>Apr 1</span>
-                <span>Shipped</span>
-                <span>$129</span>
-              </div>
-              <div className="table-row">
-                <span>#1046</span>
-                <span>Apr 3</span>
-                <span>Pending</span>
-                <span>$89</span>
-              </div>
-            </div>
-          </>
-        );
-      case 'cart':
-        return (
-          <>
-            <h2>My Cart</h2>
-            <p>Items you are planning to purchase soon.</p>
-            <ul className="cart-list">
-              <li>Wireless headphones</li>
-              <li>Product sample pack</li>
-              <li>Shipment packaging</li>
-            </ul>
-          </>
-        );
-      case 'theme':
-        return (
-          <>
-            <h2>Theme Change</h2>
-            <p>Switch between light and dark appearance instantly.</p>
-            <button type="button" className="theme-toggle-btn" onClick={toggleTheme}>
-              Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
-            </button>
-          </>
-        );
-      case 'overview':
+
       default:
         return (
-          <>
-            <h2>Overview</h2>
-            <p>Welcome to your dashboard. Select a menu item to view more details.</p>
-            <div className="overview-grid">
-              <div className="overview-card">
-                <h3>Profile</h3>
-                <p>{userName}</p>
-              </div>
-              <div className="overview-card">
-                <h3>Orders</h3>
-                <p>Ready to manage your active orders.</p>
-              </div>
-              <div className="overview-card">
-                <h3>Cart</h3>
-                <p>Review your latest items before checkout.</p>
-              </div>
-            </div>
-          </>
+          <div className="tab-pane animate-fade-in delay-100">
+            <h3>Coming Soon</h3>
+            <p className="subtitle">This section is under construction.</p>
+          </div>
         );
     }
-  }, [section, theme, userEmail, userName, navigate]);
+  };
 
   return (
-    <div className={`settings-page theme-${theme}`}>
-      <div className="settings-layout">
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <h1>Navigation</h1>
-            <p>Quick access to your account and store management.</p>
-          </div>
-          <div className="sidebar-list">
-            {menuItems.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`sidebar-item ${section === item.key ? 'sidebar-item--active' : ''}`}
-                onClick={() => handleSelect(item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        <main className="section-panel">
-          <div className="back-button-container">
+    <DashboardLayout 
+      title="Settings" 
+      subtitle="Manage your store settings and preferences."
+    >
+      <div className="settings-container glass-panel animate-slide-up delay-200">
+        <div className="settings-tabs">
+          {tabs.map((tab) => (
             <button
-              type="button"
-              className="back-btn"
-              onClick={() => navigate('/home')}
-              aria-label="Back to Homepage"
+              key={tab.id}
+              className={`tab-btn ${currentTab === tab.id ? 'active' : ''}`}
+              onClick={() => handleTabChange(tab.id)}
             >
-              ← Back to Dashboard
+              {tab.label}
             </button>
-          </div>
-          {sectionContent}
-        </main>
+          ))}
+        </div>
+
+        <div className="settings-content">
+          {renderContent()}
+          {showSaveBar ? (
+            <div className="settings-save-bar">
+              <button type="button" className="btn-save" onClick={handleSaveChanges}>
+                Save changes
+              </button>
+              {savedMessage ? <p className="settings-saved-msg">{savedMessage}</p> : null}
+            </div>
+          ) : null}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

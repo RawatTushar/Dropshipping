@@ -51,6 +51,17 @@ export const authAPI = {
 export const productsAPI = {
   getAll: () => api.get('/products'),
   getById: (id) => api.get(`/products/${id}`),
+  /** Personalized + rule-based; pass `viewedIds` from local browse history for guests. */
+  getRecommendations: (id, { limit = 8, viewedIds = [] } = {}) => {
+    const params = { limit }
+    if (viewedIds?.length) {
+      params.viewed = viewedIds.slice(0, 16).join(',')
+    }
+    return api.get(`/products/${id}/recommendations`, { params })
+  },
+  /** Fire-and-forget: persists for logged-in users (view / cart_add). */
+  trackInteraction: (productId, type) =>
+    api.post(`/products/${productId}/interaction`, { type }).catch(() => undefined),
   create: (productData) => api.post('/products', productData),
   update: (id, productData) => api.put(`/products/${id}`, productData),
   delete: (id) => api.delete(`/products/${id}`)

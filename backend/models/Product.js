@@ -5,6 +5,8 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: String,
     price: { type: Number, required: true },
+    /** Supplier / landed cost per unit — used for margin & profit reporting */
+    costPrice: { type: Number, min: 0 },
     image: String,
     brand: String,
     category: String,
