@@ -85,12 +85,6 @@
 .catalog-suggestion-item--active {
   background: var(--accent-bg);
 }
-.dark-theme{
-  filter: invert(1);
-}
-.light-theme{
-  filter: invert(0);
-}
 .catalog-suggestion-title {
   font-size: 14px;
   font-weight: 700;
@@ -281,7 +275,7 @@
   position: fixed;
   right: 20px;
   bottom: 20px;
-  z-index: 220;
+  z-index: 10100;
 }
 
 .cart-fab {

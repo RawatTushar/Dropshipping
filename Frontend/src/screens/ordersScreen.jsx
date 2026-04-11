@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import DashboardLayout from '../components/DashboardLayout';
-import CartFloating from '../components/cart/CartFloating';
 import ModalHome from '../components/modalHome';
 import {
   fetchMyOrders,
@@ -12,6 +11,7 @@ import {
 } from '../features/orders/ordersSlice';
 import { selectCurrentCurrency } from '../features/preferences/currencySlice';
 import { formatCurrencyFromUSD } from '../utils/currency';
+import { useSiteTheme } from '../utils/siteTheme';
 import { Package, Truck, Info, Calendar } from 'lucide-react';
 import '../productsScreen.css';
 import '../checkoutScreen.css';
@@ -22,6 +22,7 @@ const OrdersScreen = () => {
   const currency = useSelector(selectCurrentCurrency);
   const loading = useSelector(selectOrdersLoading);
   const error = useSelector(selectOrdersError);
+  const theme = useSiteTheme();
 
   const [activeModalItem, setActiveModalItem] = useState(null);
 
@@ -35,7 +36,7 @@ const OrdersScreen = () => {
 
   return (
     <DashboardLayout
-      title="Orders Pipeline"
+      title="Orders History"
       subtitle="Track your placed orders and delivery status"
     >
       <div className="catalog-wrap" style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
@@ -92,7 +93,19 @@ const OrdersScreen = () => {
                 <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--bg-hover)' }}>
                   <Truck size={18} style={{ color: 'var(--primary)' }} />
                   <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-main)' }}>Delivery to: {order.shippingAddress?.address || 'Standard Address'}</span>
-                  <span style={{ marginLeft: 'auto', background: 'var(--success)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }} classname={theme ==='dark' ? 'dark-theme' :'light-theme'}>
+                  <span
+                    className="order-track-status order-track-status--confirmed"
+                    style={{
+                      marginLeft: 'auto',
+                      background: 'var(--success)',
+                      color: theme === 'dark' ? '#ffffff' : '#0f172a',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     Confirmed
                   </span>
                 </div>
@@ -164,7 +177,6 @@ const OrdersScreen = () => {
         )}
       </ModalHome>
 
-      <CartFloating />
     </DashboardLayout>
   );
 };

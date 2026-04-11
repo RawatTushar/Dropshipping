@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { goDashboardAfterAuth } from '../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
 import { persistUserSession } from '../utils/authSession';
@@ -53,7 +54,7 @@ const Login = () => {
       const { token, _id, name, email, isAdmin } = response.data;
       persistUserSession({ token, _id, name, email, isAdmin });
       dispatch(setCredentials({ token, _id, name, email, isAdmin }));
-      navigate('/home');
+      goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {

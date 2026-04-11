@@ -1,7 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Package,
+  Store,
+  Truck,
+  Settings,
+  Menu,
+  X,
+  ShoppingCart,
+  ChevronRight,
+} from 'lucide-react';
 import { selectCartCount } from '../features/cart/cartSlice';
 import { logout, selectCurrentUserId } from '../features/auth/authSlice';
 import { clearUserSession } from '../utils/authSession';
@@ -12,14 +22,30 @@ import {
   selectOrdersLoading,
 } from '../features/orders/ordersSlice';
 import { selectCurrentCurrency } from '../features/preferences/currencySlice';
-import { formatCurrencyFromUSD } from '../utils/currency';
 import { readSavedStoreName } from '../utils/storePreferences';
-import shoppingCartImage from '../assets/images/shopping-cart.png';
-import lightModeImage from '../assets/images/lightmode.png';
-import nightModeImage from '../assets/images/nightmode.png';
+import { getStoredThemeForUser } from '../utils/siteTheme';
+import { usePersistedSiteTheme } from '../hooks/usePersistedSiteTheme';
+import {
+  clearStoreSplash,
+  isStoreSplashPending,
+} from '../utils/storeSplashSession';
+import StoreSplashScreen from './store/StoreSplashScreen';
+import StoreThemeToggle from './store/StoreThemeToggle';
+import StoreLogoutButton from './store/StoreLogoutButton';
+import StorePulseCard from './store/StorePulseCard';
 import '../DashboardLayout.css';
 
-const DashboardLayout = ({ children, title = 'Overview', subtitle = 'Manage your store activities.' }) => {
+const navLinkClass = ({ isActive }) =>
+  `store-nav-link${isActive ? ' active' : ''}`;
+
+const MOBILE_SIDEBAR_MAX_PX = 959;
+const DESKTOP_CLOSE_DELAY_MS = 400;
+
+const DashboardLayout = ({
+  children,
+  title = 'Overview',
+  subtitle = 'Manage your store activities.',
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,14 +57,37 @@ const DashboardLayout = ({ children, title = 'Overview', subtitle = 'Manage your
   const orders = useSelector(selectOrders);
   const ordersLoading = useSelector(selectOrdersLoading);
   const [theme, setTheme] = useState('dark');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia(`(min-width: ${MOBILE_SIDEBAR_MAX_PX + 1}px)`).matches,
+  );
   const [activeInsight, setActiveInsight] = useState('profit');
   const [storePrefsTick, setStorePrefsTick] = useState(0);
+  const [showSplash, setShowSplash] = useState(isStoreSplashPending);
+  const lastWindowScrollY = useRef(0);
   const sidebarRef = useRef(null);
+  const desktopCloseTimerRef = useRef(null);
+
   const storefrontName = useMemo(
     () => readSavedStoreName(userId),
     [userId, storePrefsTick],
   );
+
+  const clearDesktopCloseTimer = useCallback(() => {
+    if (desktopCloseTimerRef.current != null) {
+      window.clearTimeout(desktopCloseTimerRef.current);
+      desktopCloseTimerRef.current = null;
+    }
+  }, []);
+
+  const handleSplashComplete = useCallback(() => {
+    clearStoreSplash();
+    setShowSplash(false);
+  }, []);
+
+  usePersistedSiteTheme(theme, userId);
 
   useEffect(() => {
     const onStorePrefs = () => setStorePrefsTick((t) => t + 1);
@@ -47,70 +96,100 @@ const DashboardLayout = ({ children, title = 'Overview', subtitle = 'Manage your
   }, []);
 
   useEffect(() => {
-    const userThemeKey = `theme:${userId}`;
-    const savedTheme = localStorage.getItem(userThemeKey) || localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
+    const mq = window.matchMedia(`(min-width: ${MOBILE_SIDEBAR_MAX_PX + 1}px)`);
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    return () => clearDesktopCloseTimer();
+  }, [clearDesktopCloseTimer]);
+
+  useEffect(() => {
+    setTheme(getStoredThemeForUser(userId));
   }, [userId]);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    localStorage.setItem(`theme:${userId}`, theme);
-  }, [theme, userId]);
+    setNavOpen(false);
+    clearDesktopCloseTimer();
+  }, [location.pathname, clearDesktopCloseTimer]);
 
   useEffect(() => {
-    if (!isSidebarOpen) return undefined;
-
-    const closeOnOutsideScroll = (event) => {
-      if (sidebarRef.current?.contains(event.target)) return;
-      setIsSidebarOpen(false);
+    const onKey = (e) => {
+      if (e.key === 'Escape') setNavOpen(false);
     };
-
-    window.addEventListener('wheel', closeOnOutsideScroll, {
-      passive: true,
-      capture: true,
-    });
-    window.addEventListener('touchmove', closeOnOutsideScroll, {
-      passive: true,
-      capture: true,
-    });
-
-    return () => {
-      window.removeEventListener('wheel', closeOnOutsideScroll, true);
-      window.removeEventListener('touchmove', closeOnOutsideScroll, true);
-    };
-  }, [isSidebarOpen]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
-    const openFromLeftEdge = (event) => {
-      if (isSidebarOpen) return;
-      if (event.clientX <= 10) {
-        setIsSidebarOpen(true);
+    if (navOpen) {
+      lastWindowScrollY.current = window.scrollY;
+    }
+  }, [navOpen]);
+
+  useEffect(() => {
+    if (!navOpen) return undefined;
+
+    const isMobile = () => window.innerWidth <= MOBILE_SIDEBAR_MAX_PX;
+
+    const onWindowScroll = () => {
+      const y = window.scrollY;
+      if (y > lastWindowScrollY.current + 10) {
+        setNavOpen(false);
+        clearDesktopCloseTimer();
+      }
+      lastWindowScrollY.current = y;
+    };
+
+    const onWheel = (e) => {
+      const bar = sidebarRef.current;
+      if (bar && e.target instanceof Node && bar.contains(e.target)) return;
+      if (e.deltaY > 12) {
+        setNavOpen(false);
+        clearDesktopCloseTimer();
       }
     };
 
-    window.addEventListener('mousemove', openFromLeftEdge, { passive: true });
-    return () => window.removeEventListener('mousemove', openFromLeftEdge);
-  }, [isSidebarOpen]);
+    let touchStartY = 0;
 
-  useEffect(() => {
-    if (!isSidebarOpen) return;
-    if (!products.length && !productsLoading) {
-      dispatch(fetchProducts());
-    }
-    if (!orders.length && !ordersLoading) {
-      dispatch(fetchMyOrders());
-    }
-  }, [dispatch, isSidebarOpen, orders.length, ordersLoading, products.length, productsLoading]);
+    const onTouchStart = (e) => {
+      if (!isMobile()) return;
+      const bar = sidebarRef.current;
+      if (bar && e.target instanceof Node && bar.contains(e.target)) return;
+      touchStartY = e.touches[0]?.clientY ?? 0;
+    };
 
-  const isActive = (path) => location.pathname === path;
+    const onTouchMove = (e) => {
+      if (!isMobile()) return;
+      const bar = sidebarRef.current;
+      if (bar && e.target instanceof Node && bar.contains(e.target)) return;
+      const y = e.touches[0]?.clientY;
+      if (y == null) return;
+      if (touchStartY - y > 36) {
+        setNavOpen(false);
+        clearDesktopCloseTimer();
+      }
+    };
 
-  const handleNavClick = (path) => {
-    setIsSidebarOpen(false);
-    if (path) navigate(path);
-  };
+    window.addEventListener('scroll', onWindowScroll, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: true });
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
 
-  const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalPrice || 0), 0);
+    return () => {
+      window.removeEventListener('scroll', onWindowScroll);
+      window.removeEventListener('wheel', onWheel);
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+    };
+  }, [navOpen, clearDesktopCloseTimer]);
+
+  const totalRevenue = orders.reduce(
+    (sum, order) => sum + Number(order.totalPrice || 0),
+    0,
+  );
   const todayOrders = orders.filter((order) => {
     const d = new Date(order.createdAt || Date.now());
     const n = new Date();
@@ -120,201 +199,193 @@ const DashboardLayout = ({ children, title = 'Overview', subtitle = 'Manage your
       d.getFullYear() === n.getFullYear()
     );
   }).length;
-  const lowStockCount = products.filter((p) => Number(p.countInStock || 0) <= 5).length;
-  const totalStockUnits = products.reduce((sum, p) => sum + Number(p.countInStock || 0), 0);
+  const lowStockCount = products.filter(
+    (p) => Number(p.countInStock || 0) <= 5,
+  ).length;
+  const totalStockUnits = products.reduce(
+    (sum, p) => sum + Number(p.countInStock || 0),
+    0,
+  );
 
-  const sidebarLayer =
-    typeof document !== 'undefined'
-      ? createPortal(
-          <>
-            <div
-              className="sidebar-hover-trigger"
-              onMouseEnter={() => setIsSidebarOpen(true)}
-            />
+  useEffect(() => {
+    if (!orders.length && !ordersLoading) dispatch(fetchMyOrders());
+    if (!products.length && !productsLoading) dispatch(fetchProducts());
+  }, [dispatch, orders.length, ordersLoading, products.length, productsLoading]);
 
-            {isSidebarOpen ? (
-              <div
-                className="sidebar-backdrop show"
-                onClick={() => setIsSidebarOpen(false)}
-              />
-            ) : null}
+  const handleLogout = useCallback(() => {
+    clearStoreSplash();
+    setShowSplash(false);
+    dispatch(logout());
+    clearUserSession();
+    navigate('/login');
+  }, [dispatch, navigate]);
 
-            <aside
-              ref={sidebarRef}
-              className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}
-              onMouseLeave={() => setIsSidebarOpen(false)}
-            >
-        <div className="sidebar-brand" >
-          <div className="brand-icon brand-icon--pulse" aria-hidden="true">
-            <img src={shoppingCartImage} alt="" className={theme==='dark'?'icon-dark':'icon-light'}/>
-          </div>
-          <div className="brand-info">
-            <h2 className="storefront-title">
-              <span className="storefront-title__text">{storefrontName}</span>
-            </h2>
-            <span className="brand-tagline">
-              <span className="brand-tagline__dot" aria-hidden="true" />
-              SHIP PRODUCTS LIKE A PRO
-            </span>
-          </div>
+  const openFromEdge = useCallback(() => {
+    if (!isDesktop) return;
+    clearDesktopCloseTimer();
+    setNavOpen(true);
+  }, [isDesktop, clearDesktopCloseTimer]);
+
+  const onSidebarPointerEnter = useCallback(() => {
+    clearDesktopCloseTimer();
+  }, [clearDesktopCloseTimer]);
+
+  const onSidebarPointerLeave = useCallback(() => {
+    if (!isDesktop) return;
+    clearDesktopCloseTimer();
+    desktopCloseTimerRef.current = window.setTimeout(() => {
+      setNavOpen(false);
+      desktopCloseTimerRef.current = null;
+    }, DESKTOP_CLOSE_DELAY_MS);
+  }, [isDesktop, clearDesktopCloseTimer]);
+
+  const sidebar = (
+    <aside
+      ref={sidebarRef}
+      className={`store-sidebar${navOpen ? ' is-open' : ''}`}
+      onMouseEnter={onSidebarPointerEnter}
+      onMouseLeave={onSidebarPointerLeave}
+    >
+      <div className="store-sidebar__brand">
+        <div className="store-sidebar__logo-mark" aria-hidden>
+          <Store size={20} strokeWidth={2.25} />
         </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-section-title">Insights</div>
-          <ul className="sidebar-nav">
-            <li>
-              <button
-                className={`nav-item ${activeInsight === 'profit' ? 'active-soft' : ''}`}
-                onClick={() => setActiveInsight('profit')}
-              >
-                Profit Pulse <span className="nav-badge">Live</span>
-              </button>
-            </li>
-            <li>
-              <button
-                className={`nav-item ${activeInsight === 'inventory' ? 'active-soft' : ''}`}
-                onClick={() => setActiveInsight('inventory')}
-              >
-                Inventory Watch <span className="nav-badge">Now</span>
-              </button>
-            </li>
-          </ul>
-          <div className="insight-card">
-            {activeInsight === 'profit' ? (
-              <>
-                <p className="insight-card-title">Profit Pulse</p>
-                <p className="insight-card-value">{formatCurrencyFromUSD(totalRevenue, currency)}</p>
-                <p className="insight-card-meta">
-                  {ordersLoading ? 'Refreshing orders...' : `${todayOrders} order(s) today`}
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="insight-card-title">Inventory Watch</p>
-                <p className="insight-card-value">{totalStockUnits}</p>
-                <p className="insight-card-meta">
-                  {productsLoading ? 'Refreshing stock...' : `${lowStockCount} low-stock SKU(s)`}
-                </p>
-              </>
-            )}
-          </div>
+        <div className="store-sidebar__titles">
+          <h2>{storefrontName}</h2>
+          <span>Storefront</span>
         </div>
+      </div>
 
-        <div className="sidebar-section">
-          <div className="sidebar-section-title">Menu</div>
-          <ul className="sidebar-nav">
-            <li>
-              <button
-                className={`nav-item ${isActive('/home') ? 'active' : ''}`}
-                onClick={() => handleNavClick('/home')}
-              >
-                Command Center
-              </button>
-            </li>
-            <li>
-              <button
-                className={`nav-item ${isActive('/orders') ? 'active' : ''}`}
-                onClick={() => handleNavClick('/orders')}
-              >
-                Track your orders
-              </button>
-            </li>
-            <li>
-              <button
-                className={`nav-item ${isActive('/products') ? 'active' : ''}`}
-                onClick={() => handleNavClick('/products')}
-              >
-                Products
-              </button>
-            </li>
-            <li>
-              <button className="nav-item" onClick={() => setIsSidebarOpen(false)}>Analytics</button>
-            </li>
-            {cartCount > 0 ? (
-              <li>
-                <button
-                  className={`nav-item ${isActive('/checkout') ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/checkout')}
-                >
-                  Checkout
-                </button>
-              </li>
-            ) : null}
-            <li>
-              <button
-                className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
-                onClick={() => handleNavClick('/settings')}
-              >
-                Settings
-              </button>
-            </li>
-          </ul>
-        </div>
+      <div className="store-sidebar__scroll">
+        <StorePulseCard
+          activeInsight={activeInsight}
+          onInsightChange={setActiveInsight}
+          currency={currency}
+          totalRevenue={totalRevenue}
+          todayOrders={todayOrders}
+          ordersLoading={ordersLoading}
+          totalStockUnits={totalStockUnits}
+          lowStockCount={lowStockCount}
+          productsLoading={productsLoading}
+        />
 
-        <div className="sidebar-footer">
-          <div className="theme-switcher">
-            <button
-              className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
-              onClick={() => setTheme('light')}
-            >
-              <img src={lightModeImage} alt="" aria-hidden="true" className="theme-btn-icon" />
-              Light
-            </button>
-            <button
-              className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
-              onClick={() => setTheme('dark')}
-            >
-              <img src={nightModeImage} alt="" aria-hidden="true" className="theme-btn-icon" />
-              Dark
-            </button>
-          </div>
+        <p className="store-sidebar__section-label">Navigate</p>
+        <nav className="store-nav" aria-label="Main">
+          <NavLink to="/home" end className={navLinkClass}>
+            <LayoutDashboard size={20} strokeWidth={2} />
+            <span>Home</span>
+          </NavLink>
+          <NavLink
+            to="/products"
+            className={({ isActive }) =>
+              `store-nav-link${
+                isActive || location.pathname.startsWith('/products/') ? ' active' : ''
+              }`
+            }
+          >
+            <Package size={20} strokeWidth={2} />
+            <span>Catalog</span>
+          </NavLink>
+          <NavLink to="/orders" className={navLinkClass}>
+            <Truck size={20} strokeWidth={2} />
+            <span>Orders</span>
+          </NavLink>
+          {cartCount > 0 ? (
+            <NavLink to="/checkout" className={navLinkClass}>
+              <ShoppingCart size={20} strokeWidth={2} />
+              <span>Checkout</span>
+              <span className="store-nav-badge">{cartCount}</span>
+            </NavLink>
+          ) : null}
+          <NavLink to="/settings" className={navLinkClass}>
+            <Settings size={20} strokeWidth={2} />
+            <span>Settings</span>
+          </NavLink>
+        </nav>
+      </div>
 
-          <button className="nav-item logout-btn" onClick={() => {
-            dispatch(logout());
-            clearUserSession();
-            navigate('/login');
-          }}>
-            Log Out
-          </button>
-        </div>
-      </aside>
-          </>,
-          document.body,
-        )
-      : null;
+      <div className="store-sidebar__footer">
+        <StoreThemeToggle theme={theme} onChange={setTheme} />
+        <StoreLogoutButton onClick={handleLogout} />
+      </div>
+    </aside>
+  );
 
   return (
-    <div className="dashboard-layout">
-      {sidebarLayer}
+    <>
+      <StoreSplashScreen visible={showSplash} onComplete={handleSplashComplete} />
 
-      <main className="dashboard-main">
-        <header className="dashboard-header">
-          <div className="header-left">
-            <button
-              className="btn-icon btn-hamburger"
-              onClick={() => setIsSidebarOpen(true)}
-              title="Open Menu"
-            >
-              ☰
-            </button>
-            <div className="header-title-group header-title-group--enter">
-              <h1 className="dashboard-page-heading">{title}</h1>
-              <p className="dashboard-page-subtitle">{subtitle}</p>
+      <div
+        className={`store-shell${showSplash ? ' store-shell--behind-splash' : ''}`}
+        aria-hidden={showSplash}
+      >
+        {isDesktop ? (
+          <div
+            className="store-edge-trigger"
+            onMouseEnter={openFromEdge}
+            aria-hidden
+          />
+        ) : null}
+
+        <div
+          className={`store-sidebar-backdrop${navOpen ? ' is-visible' : ''}`}
+          onClick={() => {
+            clearDesktopCloseTimer();
+            setNavOpen(false);
+          }}
+          aria-hidden={!navOpen}
+        />
+        {sidebar}
+
+        <div className="store-shell-main">
+          <header className="store-header">
+            <div className="store-header__left">
+              <button
+                type="button"
+                className="store-icon-btn store-icon-btn--menu"
+                onClick={() => {
+                  clearDesktopCloseTimer();
+                  setNavOpen((o) => !o);
+                }}
+                aria-expanded={navOpen}
+                aria-label={navOpen ? 'Close menu' : 'Open menu'}
+              >
+                {navOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+              <div className="store-header__titles">
+                <h1 className="store-page-title">{title}</h1>
+                <p className="store-page-subtitle">{subtitle}</p>
+              </div>
             </div>
-          </div>
+            <div className="store-header__actions">
+              {cartCount > 0 ? (
+                <button
+                  type="button"
+                  className="store-header-cart"
+                  onClick={() => navigate('/checkout')}
+                >
+                  <ShoppingCart size={18} strokeWidth={2} />
+                  <span>Cart</span>
+                  <span className="store-header-cart__badge">{cartCount}</span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="store-header-cta"
+                onClick={() => navigate('/products')}
+              >
+                <span>Browse catalog</span>
+                <ChevronRight size={18} strokeWidth={2.25} />
+              </button>
+            </div>
+          </header>
 
-          <div className="header-actions header-actions--enter">
-            <button className="btn-primary" onClick={() => navigate('/products')}>
-              + Add Product
-            </button>
+          <div className="store-content store-content--route-enter" key={location.pathname}>
+            {children}
           </div>
-        </header>
-
-        <div className="content-container">
-          {children}
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 };
 

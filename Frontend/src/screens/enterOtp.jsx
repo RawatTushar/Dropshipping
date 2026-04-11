@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { goDashboardAfterAuth } from '../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI, getApiErrorMessage } from '../api/api';
 import { persistUserSession } from '../utils/authSession';
@@ -53,7 +54,7 @@ const EnterOTP = () => {
       const { token, _id, name, email: accountEmail, isAdmin } = response.data;
       persistUserSession({ token, _id, name, email: accountEmail, isAdmin });
       dispatch(setCredentials({ token, _id, name, email: accountEmail, isAdmin }));
-      navigate('/home');
+      goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Invalid OTP. Please try again.'));
     } finally {

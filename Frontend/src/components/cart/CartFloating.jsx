@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -38,7 +39,7 @@ const CartFloating = () => {
 
   if (cartCount < 1) return null;
 
-  return (
+  const tree = (
     <div className="cart-floating-wrap" ref={wrapRef}>
       <aside className={`cart-popover ${open ? 'open' : 'closed'}`}>
         <div className="cart-header">
@@ -116,6 +117,10 @@ const CartFloating = () => {
       </button>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(tree, document.body)
+    : null;
 };
 
 export default CartFloating;

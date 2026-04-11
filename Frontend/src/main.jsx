@@ -4,7 +4,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import App from './App';
 import { store } from './store';
+import { hydrateThemeFromStorage } from './utils/siteTheme';
 import './style.css';
+
+hydrateThemeFromStorage();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
