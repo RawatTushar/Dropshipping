@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { logout, setCredentials } from '../auth/authSlice';
+import { mergeGuestCartIntoUserBucket } from '../../utils/cartMerge';
 
 const getUserId = (state, providedUserId) =>
   providedUserId ||
@@ -93,34 +94,13 @@ const cartSlice = createSlice({
           action.payload?._id || action.payload?.email || '';
         if (!nextUserId) return;
 
-        const guestItems = state.byUser.guest || [];
-        if (!guestItems.length) return;
-
-        const userItems = state.byUser[nextUserId] || [];
-        if (!userItems.length) {
-          state.byUser[nextUserId] = guestItems;
-        } else {
-          // Merge guest items into user items without losing quantities.
-          const merged = [...userItems];
-          for (const guestItem of guestItems) {
-            const existing = merged.find((item) => item._id === guestItem._id);
-            if (existing) {
-              const stock = Number(existing.countInStock ?? guestItem.countInStock ?? 99);
-              existing.qty = Math.min(
-                Number(existing.qty || 0) + Number(guestItem.qty || 0),
-                Math.max(1, stock)
-              );
-            } else {
-              merged.push(guestItem);
-            }
-          }
-          state.byUser[nextUserId] = merged;
-        }
-
-        delete state.byUser.guest;
+        state.byUser = mergeGuestCartIntoUserBucket(state.byUser, nextUserId);
       })
-      .addCase(logout, (state) => {
-        state.byUser = {};
+      // Do not clear cart on logout: `byUser` is keyed per account (and `guest`).
+      // Clearing wiped localStorage via the store subscriber and broke login restore.
+      // When logged out, selectors use the `guest` bucket; signed-in users see their own key again.
+      .addCase(logout, (_state) => {
+        /* no-op: preserve cart.byUser for per-user persistence */
       });
   },
 });

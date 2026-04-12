@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const orderItemSchema = new mongoose.Schema({
+const draftItemSchema = new mongoose.Schema({
   name: String,
   qty: Number,
   image: String,
@@ -8,28 +8,29 @@ const orderItemSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
 });
 
-const orderSchema = new mongoose.Schema(
+const checkoutDraftSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    orderItems: [orderItemSchema],
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    orderItems: [draftItemSchema],
     shippingAddress: {
       address: String,
       city: String,
       postalCode: String,
       country: String,
     },
-    paymentMethod: String,
     itemsPrice: { type: Number, default: 0 },
     shippingPrice: { type: Number, default: 0 },
     taxPrice: { type: Number, default: 0 },
     totalPrice: { type: Number, default: 0 },
-    isPaid: { type: Boolean, default: false },
-    paidAt: Date,
-    stripeSessionId: { type: String, sparse: true, unique: true },
-    isDelivered: { type: Boolean, default: false },
-    deliveredAt: Date,
+    stripeSessionId: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+checkoutDraftSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 });
+
+module.exports = mongoose.model("CheckoutDraft", checkoutDraftSchema);

@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   clearCart,
-  removeFromCart,
+  removeOneFromCart,
   selectCartCountByUser,
   selectCartItemsByUser,
   selectCartSubtotalByUser,
@@ -12,7 +12,7 @@ import { selectCurrentUserId } from '../../features/auth/authSlice';
 import { selectCurrentCurrency } from '../../features/preferences/currencySlice';
 import { formatCurrencyFromUSD } from '../../utils/currency';
 
-const CartPanel = () => {
+const CartPanel = ({ showHeader = true }) => {
   const dispatch = useDispatch();
   const userId = useSelector(selectCurrentUserId);
   const currency = useSelector(selectCurrentCurrency);
@@ -21,11 +21,15 @@ const CartPanel = () => {
   const subtotal = useSelector((state) => selectCartSubtotalByUser(state, userId));
 
   return (
-    <aside className="cart-panel">
-      <div className="cart-header">
-        <h3>Your Cart</h3>
-        <span>{cartCount} item(s)</span>
-      </div>
+    <aside className={`cart-panel${showHeader ? '' : ' cart-panel--embedded'}`}>
+      {showHeader ? (
+        <div className="cart-header">
+          <h3>Your Cart</h3>
+          <span>{cartCount} item(s)</span>
+        </div>
+      ) : (
+        <p className="cart-panel__meta">{cartCount} item(s)</p>
+      )}
 
       {items.length === 0 ? (
         <p className="cart-empty">No items in cart yet.</p>
@@ -56,10 +60,14 @@ const CartPanel = () => {
                       }
                     />
                     <button
+                      type="button"
                       className="cart-remove-btn"
-                      onClick={() => dispatch(removeFromCart({ productId: item._id, userId }))}
+                      title="Remove one unit from this line"
+                      onClick={() =>
+                        dispatch(removeOneFromCart({ productId: item._id, userId }))
+                      }
                     >
-                      Remove
+                      −1
                     </button>
                   </div>
                 </div>

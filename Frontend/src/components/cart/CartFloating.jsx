@@ -71,12 +71,14 @@ const CartFloating = () => {
                     }
                   />
                   <button
+                    type="button"
                     className="cart-remove-btn liquid-btn"
+                    title="Remove one unit"
                     onClick={() =>
                       dispatch(removeOneFromCart({ productId: item._id, userId }))
                     }
                   >
-                    Remove
+                    −1
                   </button>
                 </div>
               </div>

@@ -1,17 +1,8 @@
 const Order = require("../models/Order");
-const Product = require("../models/Product");
-
-const rollbackStock = async (changes) => {
-  if (!changes.length) return;
-
-  await Promise.all(
-    changes.map((change) =>
-      Product.findByIdAndUpdate(change.productId, {
-        $inc: { countInStock: change.qty },
-      })
-    )
-  );
-};
+const {
+  createOrderWithInventory,
+  restoreInventoryFromCanceledOrder,
+} = require("../services/orderFulfillmentService");
 
 const addOrderItems = async (req, res) => {
   try {
@@ -28,48 +19,8 @@ const addOrderItems = async (req, res) => {
       return res.status(400).json({ message: "No order items" });
     }
 
-    // Merge duplicate product rows to avoid double-updating stock for same product.
-    const mergedItems = new Map();
-    for (const item of orderItems) {
-      const productId = String(item.product || "");
-      const qty = Number(item.qty || 0);
-      if (!productId || qty < 1) {
-        return res.status(400).json({ message: "Invalid order item payload" });
-      }
-
-      const existing = mergedItems.get(productId);
-      mergedItems.set(productId, {
-        productId,
-        qty: Number((existing?.qty || 0) + qty),
-        name: item.name || existing?.name || "Product",
-      });
-    }
-
-    const reservedChanges = [];
-    for (const merged of mergedItems.values()) {
-      const updated = await Product.findOneAndUpdate(
-        {
-          _id: merged.productId,
-          countInStock: { $gte: merged.qty },
-        },
-        {
-          $inc: { countInStock: -merged.qty },
-        },
-        { new: true }
-      );
-
-      if (!updated) {
-        await rollbackStock(reservedChanges);
-        return res.status(400).json({
-          message: `Insufficient stock for ${merged.name}. Please refresh products and try again.`,
-        });
-      }
-
-      reservedChanges.push({ productId: merged.productId, qty: merged.qty });
-    }
-
-    const order = new Order({
-      user: req.user._id,
+    const created = await createOrderWithInventory({
+      userId: req.user._id,
       orderItems,
       shippingAddress,
       paymentMethod,
@@ -77,15 +28,10 @@ const addOrderItems = async (req, res) => {
       taxPrice,
       shippingPrice,
       totalPrice,
+      isPaid: false,
+      paidAt: null,
+      stripeSessionId: null,
     });
-
-    let created;
-    try {
-      created = await order.save();
-    } catch (saveErr) {
-      await rollbackStock(reservedChanges);
-      throw saveErr;
-    }
 
     res.status(201).json(created);
   } catch (err) {
@@ -116,4 +62,102 @@ const getMyOrders = async (req, res) => {
   }
 };
 
-module.exports = { addOrderItems, getOrderById, getMyOrders };
+const ORDER_EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * User updates own order (delivery address only) within 24h of placing it.
+ */
+const updateMyOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.isDelivered) {
+      return res.status(400).json({ message: "Delivered orders cannot be edited." });
+    }
+    const placedAt = new Date(order.createdAt).getTime();
+    if (!Number.isFinite(placedAt)) {
+      return res.status(400).json({ message: "Invalid order data." });
+    }
+    if (Date.now() - placedAt > ORDER_EDIT_WINDOW_MS) {
+      return res.status(400).json({
+        message:
+          "This order can no longer be edited. The 24-hour edit window has passed.",
+      });
+    }
+
+    const { shippingAddress } = req.body;
+    if (!shippingAddress || typeof shippingAddress !== "object") {
+      return res.status(400).json({ message: "shippingAddress is required." });
+    }
+
+    if (!order.shippingAddress) {
+      order.shippingAddress = {};
+    }
+
+    if (shippingAddress.address != null) {
+      order.shippingAddress.address = String(shippingAddress.address).trim();
+    }
+    if (shippingAddress.city != null) {
+      order.shippingAddress.city = String(shippingAddress.city).trim();
+    }
+    if (shippingAddress.postalCode != null) {
+      order.shippingAddress.postalCode = String(shippingAddress.postalCode).trim();
+    }
+    if (shippingAddress.country != null) {
+      order.shippingAddress.country = String(shippingAddress.country).trim();
+    }
+
+    const addr = String(order.shippingAddress.address || "").trim();
+    if (addr.length < 8) {
+      return res.status(400).json({
+        message: "Please provide a complete delivery address (at least 8 characters).",
+      });
+    }
+
+    await order.save();
+    res.json(order);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+/**
+ * User cancels own order: restore stock, reduce soldCount, delete order.
+ * Not allowed after marked delivered.
+ */
+const cancelMyOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.isDelivered) {
+      return res
+        .status(400)
+        .json({ message: "Delivered orders cannot be cancelled." });
+    }
+
+    await restoreInventoryFromCanceledOrder(order);
+
+    await Order.findByIdAndDelete(order._id);
+    res.json({ message: "Order cancelled", _id: order._id });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  addOrderItems,
+  getOrderById,
+  getMyOrders,
+  updateMyOrder,
+  cancelMyOrder,
+};

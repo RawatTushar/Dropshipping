@@ -33,6 +33,9 @@ import StoreSplashScreen from './store/StoreSplashScreen';
 import StoreThemeToggle from './store/StoreThemeToggle';
 import StoreLogoutButton from './store/StoreLogoutButton';
 import StorePulseCard from './store/StorePulseCard';
+import ModalHome from './modalHome';
+import CartPanel from './cart/CartPanel';
+import '../productsScreen.css';
 import '../DashboardLayout.css';
 
 const navLinkClass = ({ isActive }) =>
@@ -66,6 +69,7 @@ const DashboardLayout = ({
   const [activeInsight, setActiveInsight] = useState('profit');
   const [storePrefsTick, setStorePrefsTick] = useState(0);
   const [showSplash, setShowSplash] = useState(isStoreSplashPending);
+  const [headerCartModalOpen, setHeaderCartModalOpen] = useState(false);
   const lastWindowScrollY = useRef(0);
   const sidebarRef = useRef(null);
   const desktopCloseTimerRef = useRef(null);
@@ -116,6 +120,19 @@ const DashboardLayout = ({
   }, [location.pathname, clearDesktopCloseTimer]);
 
   useEffect(() => {
+    setHeaderCartModalOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!headerCartModalOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setHeaderCartModalOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [headerCartModalOpen]);
+
+  useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') setNavOpen(false);
     };
@@ -132,11 +149,9 @@ const DashboardLayout = ({
   useEffect(() => {
     if (!navOpen) return undefined;
 
-    const isMobile = () => window.innerWidth <= MOBILE_SIDEBAR_MAX_PX;
-
     const onWindowScroll = () => {
       const y = window.scrollY;
-      if (y > lastWindowScrollY.current + 10) {
+      if (Math.abs(y - lastWindowScrollY.current) > 8) {
         setNavOpen(false);
         clearDesktopCloseTimer();
       }
@@ -146,7 +161,7 @@ const DashboardLayout = ({
     const onWheel = (e) => {
       const bar = sidebarRef.current;
       if (bar && e.target instanceof Node && bar.contains(e.target)) return;
-      if (e.deltaY > 12) {
+      if (Math.abs(e.deltaY) > 6 || Math.abs(e.deltaX) > 6) {
         setNavOpen(false);
         clearDesktopCloseTimer();
       }
@@ -155,19 +170,17 @@ const DashboardLayout = ({
     let touchStartY = 0;
 
     const onTouchStart = (e) => {
-      if (!isMobile()) return;
       const bar = sidebarRef.current;
       if (bar && e.target instanceof Node && bar.contains(e.target)) return;
       touchStartY = e.touches[0]?.clientY ?? 0;
     };
 
     const onTouchMove = (e) => {
-      if (!isMobile()) return;
       const bar = sidebarRef.current;
       if (bar && e.target instanceof Node && bar.contains(e.target)) return;
       const y = e.touches[0]?.clientY;
       if (y == null) return;
-      if (touchStartY - y > 36) {
+      if (Math.abs(touchStartY - y) > 28) {
         setNavOpen(false);
         clearDesktopCloseTimer();
       }
@@ -288,7 +301,7 @@ const DashboardLayout = ({
           </NavLink>
           <NavLink to="/orders" className={navLinkClass}>
             <Truck size={20} strokeWidth={2} />
-            <span>Orders</span>
+            <span>My Orders</span>
           </NavLink>
           {cartCount > 0 ? (
             <NavLink to="/checkout" className={navLinkClass}>
@@ -352,7 +365,10 @@ const DashboardLayout = ({
               >
                 {navOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
-              <div className="store-header__titles">
+              <div
+                className="store-header__titles store-header__titles--route"
+                key={location.pathname}
+              >
                 <h1 className="store-page-title">{title}</h1>
                 <p className="store-page-subtitle">{subtitle}</p>
               </div>
@@ -362,7 +378,15 @@ const DashboardLayout = ({
                 <button
                   type="button"
                   className="store-header-cart"
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => {
+                    if (location.pathname === '/checkout') {
+                      setHeaderCartModalOpen(true);
+                      return;
+                    }
+                    navigate('/checkout');
+                  }}
+                  aria-haspopup="dialog"
+                  aria-expanded={headerCartModalOpen && location.pathname === '/checkout'}
                 >
                   <ShoppingCart size={18} strokeWidth={2} />
                   <span>Cart</span>
@@ -385,6 +409,14 @@ const DashboardLayout = ({
           </div>
         </div>
       </div>
+
+      <ModalHome
+        open={headerCartModalOpen && location.pathname === '/checkout'}
+        title="Your cart"
+        onClose={() => setHeaderCartModalOpen(false)}
+      >
+        <CartPanel showHeader={false} />
+      </ModalHome>
     </>
   );
 };

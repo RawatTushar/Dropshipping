@@ -1,10 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import DashboardLayout from '../components/DashboardLayout';
 import CartFloating from '../components/cart/CartFloating';
 import ProductCard from '../components/products/ProductCard';
 import { fetchProducts } from '../features/products/productsSlice';
 import { rankProductForQuery } from '../utils/catalogSearch';
+import {
+  buildCatalogList,
+  QUICK_FILTERS,
+  SORT_OPTIONS,
+  uniqueCategories,
+} from '../utils/catalogDisplay';
 import '../productsScreen.css';
 
 const DEBOUNCE_MS = 110;
@@ -16,6 +23,10 @@ const ProductsScreen = () => {
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [sort, setSort] = useState('featured');
+  const [category, setCategory] = useState('all');
+  const [minRating, setMinRating] = useState(0);
+  const [quick, setQuick] = useState(null);
   const blurTimeout = useRef(null);
   const inputRef = useRef(null);
 
@@ -49,6 +60,72 @@ const ProductsScreen = () => {
     if (!normalizedSearch) return items;
     return rankedMatches.map((x) => x.product);
   }, [items, normalizedSearch, rankedMatches]);
+
+  const categories = useMemo(() => uniqueCategories(items), [items]);
+
+  const displayItems = useMemo(
+    () =>
+      buildCatalogList(filteredItems, {
+        category,
+        minRating,
+        quick,
+        sort,
+      }),
+    [filteredItems, category, minRating, quick, sort],
+  );
+
+  const toggleQuick = (id) => {
+    setQuick((q) => (q === id ? null : id));
+  };
+
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useState(false);
+
+  const activeFilterCount =
+    (category !== 'all' ? 1 : 0) + (minRating > 0 ? 1 : 0) + (quick ? 1 : 0);
+
+  const closeFiltersModal = useCallback(() => {
+    setFiltersVisible(false);
+    window.setTimeout(() => setFiltersOpen(false), 300);
+  }, []);
+
+  const openFiltersModal = useCallback(() => {
+    setFiltersVisible(false);
+    setFiltersOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersOpen) {
+      setFiltersVisible(false);
+      return undefined;
+    }
+    const t = window.setTimeout(() => setFiltersVisible(true), 16);
+    return () => window.clearTimeout(t);
+  }, [filtersOpen]);
+
+  useEffect(() => {
+    if (!filtersOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [filtersOpen]);
+
+  useEffect(() => {
+    if (!filtersOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeFiltersModal();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [filtersOpen, closeFiltersModal]);
+
+  const resetFilters = () => {
+    setCategory('all');
+    setMinRating(0);
+    setQuick(null);
+  };
 
   const clearBlurTimeout = useCallback(() => {
     if (blurTimeout.current) {
@@ -113,10 +190,136 @@ const ProductsScreen = () => {
     );
   };
 
+  const filterModal =
+    filtersOpen && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className={`catalog-filters-modal${filtersVisible ? ' catalog-filters-modal--open' : ''}`}
+            role="presentation"
+          >
+            <button
+              type="button"
+              className="catalog-filters-modal__scrim"
+              aria-label="Close filters"
+              onClick={closeFiltersModal}
+            />
+            <div
+              className="catalog-filters-modal__panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="catalog-filters-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header className="catalog-filters-modal__header">
+                <div className="catalog-filters-modal__head-text">
+                  <h2 id="catalog-filters-title" className="catalog-filters-modal__title">
+                    Filters
+                  </h2>
+                  <p className="catalog-filters-modal__subtitle">
+                    Narrow results by category, star rating, or curated picks. Search still applies.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="catalog-filters-modal__close"
+                  onClick={closeFiltersModal}
+                  aria-label="Close"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </header>
+
+              <div className="catalog-filters-modal__body">
+                <div className="catalog-filter-section">
+                  <div className="catalog-filter-section__head">
+                    <h3 className="catalog-filter-section__title">Category</h3>
+                    <p className="catalog-filter-section__desc">Shop within a single department</p>
+                  </div>
+                  <div className="catalog-filter-chips" role="group" aria-label="Category">
+                    <button
+                      type="button"
+                      className={`catalog-filter-chip${category === 'all' ? ' catalog-filter-chip--on' : ''}`}
+                      onClick={() => setCategory('all')}
+                    >
+                      All categories
+                    </button>
+                    {categories.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`catalog-filter-chip${category === c ? ' catalog-filter-chip--on' : ''}`}
+                        onClick={() => setCategory(c)}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="catalog-filter-section">
+                  <div className="catalog-filter-section__head">
+                    <h3 className="catalog-filter-section__title">Minimum rating</h3>
+                    <p className="catalog-filter-section__desc">Only show products at or above this score</p>
+                  </div>
+                  <div className="catalog-filter-chips" role="group" aria-label="Minimum rating">
+                    {[
+                      { v: 0, label: 'Any rating' },
+                      { v: 4, label: '4★ and up' },
+                      { v: 4.5, label: '4.5★ and up' },
+                    ].map(({ v, label }) => (
+                      <button
+                        key={v}
+                        type="button"
+                        className={`catalog-filter-chip${minRating === v ? ' catalog-filter-chip--on' : ''}`}
+                        onClick={() => setMinRating(v)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="catalog-filter-section">
+                  <div className="catalog-filter-section__head">
+                    <h3 className="catalog-filter-section__title">Quick picks</h3>
+                    <p className="catalog-filter-section__desc">Trending, top-rated, or deep discounts</p>
+                  </div>
+                  <div className="catalog-filter-chips catalog-filter-chips--stack" role="group" aria-label="Quick filters">
+                    {QUICK_FILTERS.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={`catalog-filter-chip catalog-filter-chip--wide${quick === f.id ? ' catalog-filter-chip--on' : ''}`}
+                        onClick={() => toggleQuick(f.id)}
+                      >
+                        <span className="catalog-filter-chip__label">{f.label}</span>
+                        <span className="catalog-filter-chip__hint">{f.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <footer className="catalog-filters-modal__footer">
+                <button type="button" className="catalog-filters-modal__reset" onClick={resetFilters}>
+                  Clear all
+                </button>
+                <button type="button" className="catalog-filters-modal__apply" onClick={closeFiltersModal}>
+                  Show {displayItems.length} {displayItems.length === 1 ? 'product' : 'products'}
+                </button>
+              </footer>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <DashboardLayout
       title="Products"
-      subtitle="Live catalog from your database"
+      subtitle="Browse the catalog — refine with sort and filters"
     >
       <div className="catalog-wrap">
         <div className="catalog-search">
@@ -186,20 +389,109 @@ const ProductsScreen = () => {
           ) : null}
         </div>
 
+        {!loading && !error && items.length > 0 ? (
+          <section className="catalog-controls" aria-label="Sort and filter catalog">
+            <div className="catalog-controls__inner">
+              <div className="catalog-controls__sort-block">
+                <div className="catalog-controls__sort-head">
+                  <span className="catalog-controls__eyebrow">Sort</span>
+                  <span className="catalog-controls__hint">How products are ordered in the grid</span>
+                </div>
+                <div className="catalog-sort-shell">
+                  <label className="visually-hidden" htmlFor="catalog-sort">
+                    Sort products by
+                  </label>
+                  <select
+                    id="catalog-sort"
+                    className="catalog-sort-select"
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value)}
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="catalog-controls__aside">
+                <button
+                  type="button"
+                  className="catalog-filters-trigger"
+                  onClick={openFiltersModal}
+                  aria-haspopup="dialog"
+                  aria-expanded={filtersOpen}
+                >
+                  <span className="catalog-filters-trigger__icon" aria-hidden>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M4 6h16M7 12h10M10 18h4" />
+                      <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                      <circle cx="6" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                      <circle cx="14" cy="18" r="1.5" fill="currentColor" stroke="none" />
+                    </svg>
+                  </span>
+                  <span className="catalog-filters-trigger__text">
+                    <span className="catalog-filters-trigger__title">Filters</span>
+                    <span className="catalog-filters-trigger__sub">Category, rating & deals</span>
+                  </span>
+                  {activeFilterCount > 0 ? (
+                    <span className="catalog-filters-trigger__badge" aria-label={`${activeFilterCount} active filters`}>
+                      {activeFilterCount}
+                    </span>
+                  ) : null}
+                </button>
+
+                <div className="catalog-results-stat" aria-live="polite">
+                  <span className="catalog-results-stat__value">{displayItems.length}</span>
+                  <span className="catalog-results-stat__label">
+                    {displayItems.length === 1 ? 'product' : 'products'}
+                    {(normalizedSearch || category !== 'all' || minRating > 0 || quick) &&
+                    filteredItems.length !== displayItems.length ? (
+                      <span className="catalog-results-stat__of">
+                        {' '}
+                        of {filteredItems.length} matched
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {loading ? <p>Loading products...</p> : null}
         {error ? <p className="catalog-error">{error}</p> : null}
 
-        {!loading && !error && filteredItems.length === 0 ? (
-          <p>No products match your search.</p>
+        {!loading && !error && items.length > 0 && filteredItems.length === 0 ? (
+          <p className="catalog-empty-msg">No products match your search.</p>
+        ) : null}
+
+        {!loading &&
+        !error &&
+        items.length > 0 &&
+        filteredItems.length > 0 &&
+        displayItems.length === 0 ? (
+          <p className="catalog-empty-msg">
+            No products match these filters. Try clearing quick picks or choosing “All” categories.
+          </p>
         ) : null}
 
         <div className="catalog-grid">
-          {filteredItems.map((product) => (
-            <ProductCard key={product._id} product={product} />
+          {displayItems.map((product, idx) => (
+            <div
+              key={product._id}
+              className="catalog-grid-cell"
+              style={{ animationDelay: `${Math.min(idx, 12) * 35}ms` }}
+            >
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       </div>
       <CartFloating />
+      {filterModal}
     </DashboardLayout>
   );
 };

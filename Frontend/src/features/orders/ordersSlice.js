@@ -32,6 +32,30 @@ export const createOrder = createAsyncThunk(
   }
 );
 
+export const cancelOrder = createAsyncThunk(
+  'orders/cancelOrder',
+  async (orderId, { rejectWithValue, getState }) => {
+    try {
+      await ordersAPI.cancel(orderId);
+      return { orderId: String(orderId), userId: getUserId(getState()) };
+    } catch (err) {
+      return rejectWithValue(getApiErrorMessage(err, 'Failed to cancel order.'));
+    }
+  }
+);
+
+export const updateOrder = createAsyncThunk(
+  'orders/updateOrder',
+  async ({ orderId, shippingAddress }, { rejectWithValue }) => {
+    try {
+      const { data } = await ordersAPI.update(orderId, { shippingAddress });
+      return data;
+    } catch (err) {
+      return rejectWithValue(getApiErrorMessage(err, 'Failed to update order.'));
+    }
+  }
+);
+
 const ordersSlice = createSlice({
   name: 'orders',
   initialState: {
@@ -76,6 +100,28 @@ const ordersSlice = createSlice({
       .addCase(createOrder.rejected, (state, action) => {
         state.creating = false;
         state.createError = action.payload || 'Failed to place order.';
+      })
+      .addCase(cancelOrder.fulfilled, (state, action) => {
+        const { orderId, userId } = action.payload || {};
+        const list = state.byUser[userId];
+        if (!list || !orderId) return;
+        state.byUser[userId] = list.filter(
+          (o) => String(o._id) !== orderId
+        );
+      })
+      .addCase(updateOrder.fulfilled, (state, action) => {
+        const order = action.payload;
+        if (!order?._id) return;
+        const id = String(order._id);
+        for (const uid of Object.keys(state.byUser)) {
+          const list = state.byUser[uid];
+          if (!Array.isArray(list)) continue;
+          const idx = list.findIndex((o) => String(o._id) === id);
+          if (idx !== -1) {
+            state.byUser[uid][idx] = order;
+            return;
+          }
+        }
       })
       .addCase(logout, (state) => {
         state.byUser = {};

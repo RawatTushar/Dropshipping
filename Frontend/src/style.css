@@ -178,7 +178,7 @@ code {
  */
 .page-route-enter {
   min-height: 100%;
-  animation: pageRouteEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pageRouteEnter 0.45s cubic-bezier(0.25, 0.85, 0.35, 1) both;
 }
 
 @keyframes pageRouteEnter {

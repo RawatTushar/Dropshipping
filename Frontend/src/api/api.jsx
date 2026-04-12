@@ -71,7 +71,18 @@ export const productsAPI = {
 export const ordersAPI = {
   getAll: () => api.get('/orders'),
   getById: (id) => api.get(`/orders/${id}`),
-  create: (orderData) => api.post('/orders', orderData)
+  create: (orderData) => api.post('/orders', orderData),
+  update: (id, body) => api.put(`/orders/${id}`, body),
+  cancel: (id) => api.delete(`/orders/${id}`),
+}
+
+// Stripe / payments (card checkout uses hosted Stripe Checkout)
+export const paymentsAPI = {
+  getConfig: () => api.get('/payments/config'),
+  createCheckoutSession: (payload) =>
+    api.post('/payments/create-checkout-session', payload),
+  completeStripeCheckout: (sessionId) =>
+    api.post('/payments/stripe/complete', { sessionId }),
 }
 
 // Export default api instance for custom calls

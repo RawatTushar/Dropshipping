@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import './modalHome.css';
 
 const ModalHome = ({ open, title, children, onClose }) => {
   if (!open) return null;

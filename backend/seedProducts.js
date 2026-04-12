@@ -96,12 +96,21 @@ const products = Array.from({ length: totalProducts }, (_, i) => {
   const price = Number((template.basePrice + (i % 9) * 7 + Math.floor(i / 10) * 2).toFixed(2));
   const stock = 15 + ((i * 7) % 86);
   const costPrice = Number((price * (0.52 + ((i * 13) % 18) / 100)).toFixed(2));
+  const bumpPct = 0.08 + ((i * 7) % 28) / 100;
+  const compareAtPrice = Number((price * (1 + bumpPct)).toFixed(2));
+  const rating = Math.min(5, Number((3.7 + ((i * 11) % 14) / 10).toFixed(1)));
+  const reviewCount = 8 + ((i * 19) % 420);
+  const soldCount = ((i * 23) % 890) + (i % 5) * 12;
 
   return {
     name: `${template.name} ${variant} ${serial}`,
     description: `${template.description} Model ${serial} built for modern ecommerce customers.`,
     price,
     costPrice,
+    compareAtPrice,
+    rating,
+    reviewCount,
+    soldCount,
     image: template.image,
     brand: template.brand,
     category: template.category,

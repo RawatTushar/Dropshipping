@@ -13,6 +13,7 @@ import ProductsScreen from './screens/productsScreen';
 import OrdersScreen from './screens/ordersScreen';
 import ProductDetailScreen from './screens/productDetailScreen';
 import CheckoutScreen from './screens/checkoutScreen';
+import CheckoutSuccessScreen from './screens/checkoutSuccessScreen';
 
 const App = () => {
   const location = useLocation();
@@ -22,7 +23,7 @@ const App = () => {
   }, [location.pathname]);
 
   return (
-    <div key={location.pathname} className="page-route-enter">
+    <div className="page-route-enter">
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/login-otp" element={<LoginOtp />} />
@@ -31,6 +32,7 @@ const App = () => {
         <Route path="/products/:id" element={<ProductDetailScreen />} />
         <Route path="/orders" element={<OrdersScreen />} />
         <Route path="/checkout" element={<CheckoutScreen />} />
+        <Route path="/checkout/success" element={<CheckoutSuccessScreen />} />
         <Route path="/register" element={<RegisterScreen />} />
         <Route path="/confirm-email" element={<EmailConfirmation />} />
         <Route path="/confirmation-pending" element={<EmailConfirmationPending />} />
