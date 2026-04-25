@@ -4,8 +4,8 @@ import {
   createProduct,
   getProductById,
   updateProduct,
-} from '../api/adminApi';
-import { clearAdminInfo, getAuthConfig } from '../utils/adminAuth';
+} from '../../../api/adminApi';
+import { clearAdminInfo, getAuthConfig } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Image as ImageIcon } from 'lucide-react';
 

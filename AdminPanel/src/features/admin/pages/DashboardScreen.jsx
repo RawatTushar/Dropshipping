@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAdminInsights } from '../api/adminApi';
-import { clearAdminInfo, getAdminInfo, getAuthConfig, isAdminUser } from '../utils/adminAuth';
+import { getAdminInsights } from '../../../api/adminApi';
+import { clearAdminInfo, getAdminInfo, getAuthConfig, isAdminUser } from '../../../utils/adminAuth';
 import './DashboardScreen.css';
 import { motion } from 'framer-motion';
 import { RefreshCw, ArrowRight } from 'lucide-react';

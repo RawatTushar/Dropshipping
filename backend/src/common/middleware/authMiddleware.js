@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../../features/users/user.model");
+const { readAuthCookieToken } = require("../auth/authCookies");
 
 const protect = async (req, res, next) => {
   let token;
@@ -16,7 +17,19 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, token failed" });
     }
   } else {
-    return res.status(401).json({ message: "Not authorized, no token" });
+    // fallback to httpOnly cookie
+    token = readAuthCookieToken(req);
+    if (!token) return res.status(401).json({ message: "Not authorized, no token" });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select("-password");
+      if (!req.user) {
+        return res.status(401).json({ message: "Not authorized" });
+      }
+      next();
+    } catch {
+      return res.status(401).json({ message: "Not authorized, token failed" });
+    }
   }
 };
 
@@ -31,18 +44,21 @@ const admin = (req, res, next) => {
 /** Attaches `req.user` when a valid Bearer token is present; otherwise continues as guest. */
 const optionalAuth = async (req, res, next) => {
   req.user = null;
-  if (!req.headers.authorization?.startsWith("Bearer ")) {
-    return next();
+  let token = "";
+  if (req.headers.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  } else {
+    token = readAuthCookieToken(req);
   }
+  if (!token) return next();
   try {
-    const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
     if (user) req.user = user;
   } catch {
     /* invalid or expired token — treat as guest */
   }
-  next();
+  return next();
 };
 
 module.exports = { protect, admin, optionalAuth };

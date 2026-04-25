@@ -4,8 +4,8 @@ const {
   createCheckoutSession,
   completeStripeCheckout,
   getPaymentConfig,
-} = require("../controllers/paymentController");
-const { protect } = require("../middleware/authMiddleware");
+} = require("./payment.controller");
+const { protect } = require("../../common/middleware/authMiddleware");
 
 router.get("/config", getPaymentConfig);
 router.post("/create-checkout-session", protect, createCheckoutSession);

@@ -6,12 +6,12 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
-} = require("../controllers/productController");
+} = require("./product.controller");
 const {
   getRecommendations,
   recordInteraction,
-} = require("../controllers/recommendationController");
-const { protect, admin, optionalAuth } = require("../middleware/authMiddleware");
+} = require("./recommendation.controller");
+const { protect, admin, optionalAuth } = require("../../common/middleware/authMiddleware");
 
 router.route("/").get(getProducts).post(protect, admin, createProduct);
 router.get("/:id/recommendations", optionalAuth, getRecommendations);

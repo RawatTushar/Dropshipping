@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import settingsIcon from '../assets/images/settings.png';
-import changePassword from '../screens/changePassword';
 const Settings = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();

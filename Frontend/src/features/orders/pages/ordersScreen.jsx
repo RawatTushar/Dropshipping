@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import DashboardLayout from '../components/DashboardLayout';
-import ModalHome from '../components/modalHome';
+import DashboardLayout from '../../../components/DashboardLayout';
+import ModalHome from '../../../components/modalHome';
 import {
   cancelOrder,
   fetchMyOrders,
@@ -10,13 +10,13 @@ import {
   selectOrders,
   selectOrdersError,
   selectOrdersLoading,
-} from '../features/orders/ordersSlice';
-import { selectCurrentCurrency } from '../features/preferences/currencySlice';
-import { formatCurrencyFromUSD } from '../utils/currency';
-import { useSiteTheme } from '../utils/siteTheme';
+} from '../ordersSlice';
+import { selectCurrentCurrency } from '../../preferences/currencySlice';
+import { formatCurrencyFromUSD } from '../../../utils/currency';
+import { useSiteTheme } from '../../../utils/siteTheme';
 import { Package, Truck, Info, Calendar, Ban, Pencil } from 'lucide-react';
-import '../productsScreen.css';
-import '../checkoutScreen.css';
+import '../../../productsScreen.css';
+import '../../../checkoutScreen.css';
 
 const CANCEL_CONFIRM_PHRASE = 'Delete';
 
@@ -24,9 +24,18 @@ const CANCEL_CONFIRM_PHRASE = 'Delete';
 const ORDER_EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const ORDER_EDIT_EXPIRED_TITLE =
-  "You can't change this order — the 24-hour edit window has closed. You can cancel the order if you no longer need it.";
+  "You can't change this order — the 24-hour edit window has closed.";
+const ORDER_DELETE_EXPIRED_TITLE =
+  "You can't delete this order — the 24-hour delete window has closed.";
 
 function isOrderWithinEditWindow(order) {
+  if (!order?.createdAt) return false;
+  const t = new Date(order.createdAt).getTime();
+  if (!Number.isFinite(t)) return false;
+  return Date.now() - t <= ORDER_EDIT_WINDOW_MS;
+}
+
+function isOrderWithinDeleteWindow(order) {
   if (!order?.createdAt) return false;
   const t = new Date(order.createdAt).getTime();
   if (!Number.isFinite(t)) return false;
@@ -129,6 +138,7 @@ const OrdersScreen = () => {
     setCancelBusy(true);
     setCancelErr('');
     const result = await dispatch(cancelOrder(cancelTarget._id));
+    console.log("resultttt cancel",result)
     setCancelBusy(false);
     if (cancelOrder.fulfilled.match(result)) {
       setCancelTarget(null);
@@ -222,26 +232,41 @@ const OrdersScreen = () => {
                             </span>
                           </div>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => openCancelOrder(order)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            padding: '0.45rem 0.85rem',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(220, 38, 38, 0.45)',
-                            background: 'rgba(220, 38, 38, 0.08)',
-                            color: '#dc2626',
-                            fontWeight: 600,
-                            fontSize: '0.85rem',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <Ban size={16} strokeWidth={2.25} />
-                          Cancel order
-                        </button>
+                        {isOrderWithinDeleteWindow(order) ? (
+                          <button
+                            type="button"
+                            onClick={() => openCancelOrder(order)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              padding: '0.45rem 0.85rem',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(220, 38, 38, 0.45)',
+                              background: 'rgba(220, 38, 38, 0.08)',
+                              color: '#dc2626',
+                              fontWeight: 600,
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Ban size={16} strokeWidth={2.25} />
+                            Delete order
+                          </button>
+                        ) : (
+                          <div
+                            className="order-edit-expired"
+                            role="note"
+                            tabIndex={0}
+                            title={ORDER_DELETE_EXPIRED_TITLE}
+                            aria-label={ORDER_DELETE_EXPIRED_TITLE}
+                          >
+                            <span className="order-edit-expired__label" aria-hidden>
+                              <Ban size={16} strokeWidth={2.25} />
+                              Delete order
+                            </span>
+                          </div>
+                        )}
                       </>
                     ) : null}
                   </div>

@@ -1,19 +1,20 @@
 import React, { useLayoutEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import LoginScreen from './screens/loginScreen';
-import LoginOtp from './screens/loginOtp';
-import HomePage from './screens/homePage';
-import RegisterScreen from './screens/registerScreen';
-import EmailConfirmation from './screens/emailConfirmation';
-import EmailConfirmationPending from './screens/emailConfirmationPending';
-import EnterOtp from './screens/enterOtp';
-import ChangePassword from './screens/changePassword';
-import SettingScreen from './screens/settingScreen';
-import ProductsScreen from './screens/productsScreen';
-import OrdersScreen from './screens/ordersScreen';
-import ProductDetailScreen from './screens/productDetailScreen';
-import CheckoutScreen from './screens/checkoutScreen';
-import CheckoutSuccessScreen from './screens/checkoutSuccessScreen';
+import LoginScreen from './features/auth/pages/loginScreen';
+import LoginOtp from './features/auth/pages/loginOtp';
+import HomePage from './features/home/pages/homePage';
+import RegisterScreen from './features/auth/pages/registerScreen';
+import EmailConfirmation from './features/auth/pages/emailConfirmation';
+import EmailConfirmationPending from './features/auth/pages/emailConfirmationPending';
+import EnterOtp from './features/auth/pages/enterOtp';
+import ChangePassword from './features/auth/pages/changePassword';
+import SettingScreen from './features/settings/pages/settingScreen';
+import ProductsScreen from './features/products/pages/productsScreen';
+import OrdersScreen from './features/orders/pages/ordersScreen';
+import ProductDetailScreen from './features/products/pages/productDetailScreen';
+import CheckoutScreen from './features/orders/pages/checkoutScreen';
+import CheckoutSuccessScreen from './features/orders/pages/checkoutSuccessScreen';
+import MagicLogin from './features/auth/pages/magicLogin';
 
 const App = () => {
   const location = useLocation();
@@ -36,6 +37,7 @@ const App = () => {
         <Route path="/register" element={<RegisterScreen />} />
         <Route path="/confirm-email" element={<EmailConfirmation />} />
         <Route path="/confirmation-pending" element={<EmailConfirmationPending />} />
+        <Route path="/magic-login" element={<MagicLogin />} />
         <Route path="/settings" element={<SettingScreen />} />
         <Route path="/EnterOTP" element={<EnterOtp />} />
         <Route path="/changePassword" element={<ChangePassword />} />

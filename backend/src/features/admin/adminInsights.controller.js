@@ -1,5 +1,5 @@
-const Order = require("../models/Order");
-const Product = require("../models/Product");
+const Order = require("../orders/order.model");
+const Product = require("../products/product.model");
 
 const LOW_STOCK_THRESHOLD = 10;
 

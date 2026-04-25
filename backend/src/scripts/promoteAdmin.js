@@ -1,6 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
-const User = require("./models/User");
+const User = require("../features/users/user.model");
 
 const email = process.argv[2] || "tusharrawatdpss1@gmail.com";
 

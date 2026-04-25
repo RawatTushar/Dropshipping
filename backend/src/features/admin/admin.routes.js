@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { getAdminInsights } = require("../controllers/adminInsightsController");
-const { protect, admin } = require("../middleware/authMiddleware");
+const { getAdminInsights } = require("./adminInsights.controller");
+const { protect, admin } = require("../../common/middleware/authMiddleware");
 
 router.get("/insights", protect, admin, getAdminInsights);
 

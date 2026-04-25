@@ -1,8 +1,8 @@
-const Order = require("../models/Order");
+const Order = require("./order.model");
 const {
   createOrderWithInventory,
   restoreInventoryFromCanceledOrder,
-} = require("../services/orderFulfillmentService");
+} = require("./order.fulfillment");
 
 const addOrderItems = async (req, res) => {
   try {
@@ -63,6 +63,7 @@ const getMyOrders = async (req, res) => {
 };
 
 const ORDER_EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const ORDER_CANCEL_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /**
  * User updates own order (delivery address only) within 24h of placing it.
@@ -143,6 +144,16 @@ const cancelMyOrder = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Delivered orders cannot be cancelled." });
+    }
+    const placedAt = new Date(order.createdAt).getTime();
+    if (!Number.isFinite(placedAt)) {
+      return res.status(400).json({ message: "Invalid order data." });
+    }
+    if (Date.now() - placedAt > ORDER_CANCEL_WINDOW_MS) {
+      return res.status(400).json({
+        message:
+          "This order can no longer be cancelled. The 24-hour delete window has passed.",
+      });
     }
 
     await restoreInventoryFromCanceledOrder(order);

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import DashboardLayout from '../components/DashboardLayout';
-import { selectAuthUser, selectCurrentUserId, setCredentials } from '../features/auth/authSlice';
+import DashboardLayout from '../../../components/DashboardLayout';
+import { selectAuthUser, selectCurrentUserId, setCredentials } from '../../auth/authSlice';
 import {
   selectCurrentCurrency,
   setCurrencyForUser,
-} from '../features/preferences/currencySlice';
-import '../settingScreen.css';
+} from '../../preferences/currencySlice';
+import '../../../settingScreen.css';
 import {
   DEFAULT_STORE_NAME,
   readSavedStoreName,
   storeNameStorageKey,
-} from '../utils/storePreferences';
+} from '../../../utils/storePreferences';
 
 const tabs = [
   { id: 'profile', label: 'My Details' },

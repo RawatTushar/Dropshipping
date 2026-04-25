@@ -80,8 +80,42 @@ const sendLoginOtpEmail = async (email, otp) => {
   }
 };
 
+const sendMagicLoginEmail = async (email, magicUrl) => {
+  try {
+    const transporter = createTransporter();
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Sign in link - Dropshipping",
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Sign in to Dropshipping</h2>
+        <p>Click this button to sign in. This link expires in 15 minutes.</p>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${magicUrl}"
+             style="background-color: #111827; color: white; padding: 12px 22px; text-decoration: none; border-radius: 8px; display: inline-block;">
+            Sign in
+          </a>
+        </div>
+        <p style="color: #666; font-size: 12px;">If you didn’t request this, you can ignore this email.</p>
+        <p style="word-break: break-all; color: #666; font-size: 12px;">${magicUrl}</p>
+      </div>
+    `,
+    };
+    await transporter.sendMail(mailOptions);
+    console.log("Magic login email sent to:", email);
+  } catch (error) {
+    console.error("sendMagicLoginEmail:", error);
+    throw new Error(
+      error.message ||
+        "Failed to send magic login email. Check EMAIL_USER / EMAIL_PASS."
+    );
+  }
+};
+
 module.exports = {
   sendEmailConfirmation,
   generateConfirmationToken,
   sendLoginOtpEmail,
+  sendMagicLoginEmail,
 };

@@ -6,8 +6,8 @@ const {
   getMyOrders,
   updateMyOrder,
   cancelMyOrder,
-} = require("../controllers/orderController");
-const { protect } = require("../middleware/authMiddleware");
+} = require("./order.controller");
+const { protect } = require("../../common/middleware/authMiddleware");
 
 router.route("/").post(protect, addOrderItems).get(protect, getMyOrders);
 router

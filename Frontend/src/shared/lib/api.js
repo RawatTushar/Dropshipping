@@ -23,19 +23,13 @@ export function getApiErrorMessage(err, fallback = 'Something went wrong.') {
 // Create axios instance with base URL
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// Add token to requests if available
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+// Auth is handled via httpOnly cookie (preferred) or legacy Bearer token.
 
 // Auth API calls
 export const authAPI = {
@@ -45,6 +39,9 @@ export const authAPI = {
   confirmEmail: (token) => api.get(`/auth/confirm-email/${token}`),
   sendOTP: (body) => api.post('/auth/login-otp/send', body),
   verifyOTP: (body) => api.post('/auth/login-otp/verify', body),
+  logout: () => api.post('/auth/logout'),
+  sendMagicLink: (email) => api.post('/auth/magic-link/send', { email }),
+  verifyMagicLink: (email, token) => api.post('/auth/magic-link/verify', { email, token }),
 }
 
 // Products API calls

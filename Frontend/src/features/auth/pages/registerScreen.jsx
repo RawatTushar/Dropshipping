@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { goDashboardAfterAuth } from '../utils/goDashboardAfterAuth';
+import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
-import { authAPI } from '../api/api';
-import { setCredentials } from '../features/auth/authSlice';
-import { persistUserSession } from '../utils/authSession';
-import '../login.css';
+import { authAPI } from '../../../api/api';
+import { setCredentials } from '../authSlice';
+import { persistUserSession } from '../../../utils/authSession';
+import '../../../login.css';
 // import '../screens/login.css';
-import HideAndShow from '../components/hideAndShow';
-import SaveButton from '../components/saveButton';
-import CustomInput from '../components/customInput';
-import validatePassword from '../components/validatePassword';
-import PasswordFields from '../components/passwordFields';
+import HideAndShow from '../../../components/hideAndShow';
+import SaveButton from '../../../components/saveButton';
+import CustomInput from '../../../components/customInput';
+import validatePassword from '../../../components/validatePassword';
+import PasswordFields from '../../../components/passwordFields';
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();

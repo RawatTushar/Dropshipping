@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/DashboardLayout';
-import ModalHome from '../components/modalHome';
-import { authAPI } from '../api/api';
-import { persistUserSession } from '../utils/authSession';
-import { selectAuthUser, setCredentials } from '../features/auth/authSlice';
-import { selectCurrentCurrency } from '../features/preferences/currencySlice';
-import { fetchProducts } from '../features/products/productsSlice';
-import { fetchMyOrders, selectOrders, selectOrdersError, selectOrdersLoading } from '../features/orders/ordersSlice';
-import { formatCurrencyFromUSD } from '../utils/currency';
-import '../homePage.css';
+import DashboardLayout from '../../../components/DashboardLayout';
+import ModalHome from '../../../components/modalHome';
+import { authAPI } from '../../../api/api';
+import { persistUserSession } from '../../../utils/authSession';
+import { selectAuthUser, setCredentials } from '../../auth/authSlice';
+import { selectCurrentCurrency } from '../../preferences/currencySlice';
+import { fetchProducts } from '../../products/productsSlice';
+import { fetchMyOrders, selectOrders, selectOrdersError, selectOrdersLoading } from '../../orders/ordersSlice';
+import { formatCurrencyFromUSD } from '../../../utils/currency';
+import '../../../homePage.css';
 
 const Home = () => {
   const dispatch = useDispatch();

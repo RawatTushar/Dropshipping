@@ -2,19 +2,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CreditCard, Truck } from 'lucide-react';
-import DashboardLayout from '../components/DashboardLayout';
-import { clearCart, selectCartItems, selectCartSubtotal } from '../features/cart/cartSlice';
-import { selectAuthToken, selectCurrentUserId } from '../features/auth/authSlice';
-import { selectCurrentCurrency } from '../features/preferences/currencySlice';
+import DashboardLayout from '../../../components/DashboardLayout';
+import { clearCart, selectCartItems, selectCartSubtotal } from '../../cart/cartSlice';
+import { selectAuthToken, selectCurrentUserId } from '../../auth/authSlice';
+import { selectCurrentCurrency } from '../../preferences/currencySlice';
 import {
   createOrder,
   selectOrderCreateError,
   selectOrderCreating,
-} from '../features/orders/ordersSlice';
-import { fetchProducts } from '../features/products/productsSlice';
-import { formatCurrencyFromUSD } from '../utils/currency';
-import { paymentsAPI, getApiErrorMessage } from '../api/api';
-import '../checkoutScreen.css';
+} from '../ordersSlice';
+import { fetchProducts } from '../../products/productsSlice';
+import { formatCurrencyFromUSD } from '../../../utils/currency';
+import { paymentsAPI, getApiErrorMessage } from '../../../api/api';
+import '../../../checkoutScreen.css';
 
 const CheckoutScreen = () => {
   const dispatch = useDispatch();

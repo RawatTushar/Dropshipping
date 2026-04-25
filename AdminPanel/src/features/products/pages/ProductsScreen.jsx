@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteProduct, getProducts } from '../api/adminApi';
-import { clearAdminInfo, getAuthConfig } from '../utils/adminAuth';
+import { deleteProduct, getProducts } from '../../../api/adminApi';
+import { clearAdminInfo, getAuthConfig } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 

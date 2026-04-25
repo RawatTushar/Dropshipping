@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
-import { productsAPI } from '../api/api';
-import DashboardLayout from '../components/DashboardLayout';
-import ProductRecommendations from '../components/products/ProductRecommendations';
-import ProductSocial from '../components/products/ProductSocial';
-import { fetchProductById } from '../features/products/productsSlice';
-import { selectCurrentCurrency } from '../features/preferences/currencySlice';
-import { formatCurrencyFromUSD } from '../utils/currency';
-import { recordLocalProductView } from '../utils/browseSignals';
-import '../productDetailScreen.css';
+import { productsAPI } from '../../../api/api';
+import DashboardLayout from '../../../components/DashboardLayout';
+import ProductRecommendations from '../../../components/products/ProductRecommendations';
+import ProductSocial from '../../../components/products/ProductSocial';
+import { fetchProductById } from '../productsSlice';
+import { selectCurrentCurrency } from '../../preferences/currencySlice';
+import { formatCurrencyFromUSD } from '../../../utils/currency';
+import { recordLocalProductView } from '../../../utils/browseSignals';
+import '../../../productDetailScreen.css';
 
 const ProductDetailScreen = () => {
   const { id } = useParams();

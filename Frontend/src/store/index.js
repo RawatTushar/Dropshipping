@@ -19,12 +19,12 @@ function loadPersistedCart() {
     let byUser = JSON.parse(raw);
     if (!byUser || typeof byUser !== 'object' || Array.isArray(byUser)) return undefined;
 
-    const token = localStorage.getItem('token');
     const userId = localStorage.getItem('userId') || '';
     const email = localStorage.getItem('userEmail') || '';
     const userKey = userId || email;
 
-    if (token && userKey) {
+    // Cookie-based auth: if we have a user key, merge guest cart into that bucket.
+    if (userKey) {
       byUser = mergeGuestCartIntoUserBucket(byUser, userKey);
     }
 

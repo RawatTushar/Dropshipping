@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
-const Product = require("../models/Product");
-const Order = require("../models/Order");
-const User = require("../models/User");
+const Product = require("./product.model");
+const Order = require("../orders/order.model");
+const User = require("../users/user.model");
 
 const MAX_VIEWED_QUERY = 16;
 const DEFAULT_LIMIT = 8;

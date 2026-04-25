@@ -1,32 +1,32 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import DashboardLayout from '../components/DashboardLayout';
-import CartFloating from '../components/cart/CartFloating';
-import ProductCard from '../components/products/ProductCard';
-import { fetchProducts } from '../features/products/productsSlice';
-import { rankProductForQuery } from '../utils/catalogSearch';
+import DashboardLayout from '../../../components/DashboardLayout';
+import CartFloating from '../../../components/cart/CartFloating';
+import ProductCard from '../../../components/products/ProductCard';
+import { fetchProducts } from '../productsSlice';
+import { rankProductForQuery } from '../../../utils/catalogSearch';
 import {
   buildCatalogList,
   QUICK_FILTERS,
   SORT_OPTIONS,
   uniqueCategories,
-} from '../utils/catalogDisplay';
-import '../productsScreen.css';
+} from '../../../utils/catalogDisplay';
+import '../../../productsScreen.css';
 
-const DEBOUNCE_MS = 110;
+const PRODUCTS_PAGE_SIZE = 30;
 
 const ProductsScreen = () => {
   const dispatch = useDispatch();
   const { items, loading, error } = useSelector((state) => state.products);
   const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [sort, setSort] = useState('featured');
   const [category, setCategory] = useState('all');
   const [minRating, setMinRating] = useState(0);
   const [quick, setQuick] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const blurTimeout = useRef(null);
   const inputRef = useRef(null);
 
@@ -34,12 +34,8 @@ const ProductsScreen = () => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedQuery(query.trim()), DEBOUNCE_MS);
-    return () => window.clearTimeout(t);
-  }, [query]);
-
-  const normalizedSearch = debouncedQuery.toLowerCase();
+  const deferredQuery = useDeferredValue(query);
+  const normalizedSearch = deferredQuery.trim().toLowerCase();
 
   const rankedMatches = useMemo(() => {
     if (!normalizedSearch) return [];
@@ -73,58 +69,49 @@ const ProductsScreen = () => {
       }),
     [filteredItems, category, minRating, quick, sort],
   );
+  const totalPages = Math.max(1, Math.ceil(displayItems.length / PRODUCTS_PAGE_SIZE));
+  const pagedItems = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PAGE_SIZE;
+    return displayItems.slice(start, start + PRODUCTS_PAGE_SIZE);
+  }, [displayItems, currentPage]);
 
   const toggleQuick = (id) => {
     setQuick((q) => (q === id ? null : id));
+    setCurrentPage(1);
   };
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filtersVisible, setFiltersVisible] = useState(false);
 
   const activeFilterCount =
     (category !== 'all' ? 1 : 0) + (minRating > 0 ? 1 : 0) + (quick ? 1 : 0);
 
   const closeFiltersModal = useCallback(() => {
-    setFiltersVisible(false);
-    window.setTimeout(() => setFiltersOpen(false), 300);
+    setFiltersOpen(false);
   }, []);
 
   const openFiltersModal = useCallback(() => {
-    setFiltersVisible(false);
     setFiltersOpen(true);
   }, []);
 
   useEffect(() => {
-    if (!filtersOpen) {
-      setFiltersVisible(false);
-      return undefined;
-    }
-    const t = window.setTimeout(() => setFiltersVisible(true), 16);
-    return () => window.clearTimeout(t);
-  }, [filtersOpen]);
-
-  useEffect(() => {
-    if (!filtersOpen) return undefined;
     const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [filtersOpen]);
-
-  useEffect(() => {
     if (!filtersOpen) return undefined;
+    document.body.style.overflow = 'hidden';
     const onKey = (e) => {
       if (e.key === 'Escape') closeFiltersModal();
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
   }, [filtersOpen, closeFiltersModal]);
 
   const resetFilters = () => {
     setCategory('all');
     setMinRating(0);
     setQuick(null);
+    setCurrentPage(1);
   };
 
   const clearBlurTimeout = useCallback(() => {
@@ -144,7 +131,7 @@ const ProductsScreen = () => {
 
   const applySuggestionProduct = useCallback((product) => {
     setQuery(product.name);
-    setDebouncedQuery(product.name.trim());
+    setCurrentPage(1);
     setShowSuggestions(false);
     setActiveSuggestion(-1);
     inputRef.current?.focus();
@@ -169,10 +156,20 @@ const ProductsScreen = () => {
   };
 
   useEffect(() => {
-    if (activeSuggestion >= suggestions.length) {
-      setActiveSuggestion(suggestions.length ? suggestions.length - 1 : -1);
-    }
-  }, [activeSuggestion, suggestions.length]);
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages = [1];
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    if (start > 2) pages.push('...');
+    for (let p = start; p <= end; p += 1) pages.push(p);
+    if (end < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  }, [currentPage, totalPages]);
 
   const highlightMatch = (text, q) => {
     const full = String(text || '');
@@ -194,7 +191,7 @@ const ProductsScreen = () => {
     filtersOpen && typeof document !== 'undefined'
       ? createPortal(
           <div
-            className={`catalog-filters-modal${filtersVisible ? ' catalog-filters-modal--open' : ''}`}
+            className={`catalog-filters-modal${filtersOpen ? ' catalog-filters-modal--open' : ''}`}
             role="presentation"
           >
             <button
@@ -241,7 +238,10 @@ const ProductsScreen = () => {
                     <button
                       type="button"
                       className={`catalog-filter-chip${category === 'all' ? ' catalog-filter-chip--on' : ''}`}
-                      onClick={() => setCategory('all')}
+                      onClick={() => {
+                        setCategory('all');
+                        setCurrentPage(1);
+                      }}
                     >
                       All categories
                     </button>
@@ -250,7 +250,10 @@ const ProductsScreen = () => {
                         key={c}
                         type="button"
                         className={`catalog-filter-chip${category === c ? ' catalog-filter-chip--on' : ''}`}
-                        onClick={() => setCategory(c)}
+                        onClick={() => {
+                          setCategory(c);
+                          setCurrentPage(1);
+                        }}
                       >
                         {c}
                       </button>
@@ -273,7 +276,10 @@ const ProductsScreen = () => {
                         key={v}
                         type="button"
                         className={`catalog-filter-chip${minRating === v ? ' catalog-filter-chip--on' : ''}`}
-                        onClick={() => setMinRating(v)}
+                        onClick={() => {
+                          setMinRating(v);
+                          setCurrentPage(1);
+                        }}
                       >
                         {label}
                       </button>
@@ -331,6 +337,7 @@ const ProductsScreen = () => {
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
+              setCurrentPage(1);
               setShowSuggestions(true);
               setActiveSuggestion(-1);
             }}
@@ -352,7 +359,7 @@ const ProductsScreen = () => {
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 setQuery('');
-                setDebouncedQuery('');
+                setCurrentPage(1);
                 setActiveSuggestion(-1);
                 inputRef.current?.focus();
               }}
@@ -405,7 +412,10 @@ const ProductsScreen = () => {
                     id="catalog-sort"
                     className="catalog-sort-select"
                     value={sort}
-                    onChange={(e) => setSort(e.target.value)}
+                    onChange={(e) => {
+                      setSort(e.target.value);
+                      setCurrentPage(1);
+                    }}
                   >
                     {SORT_OPTIONS.map((o) => (
                       <option key={o.id} value={o.id}>
@@ -479,7 +489,7 @@ const ProductsScreen = () => {
         ) : null}
 
         <div className="catalog-grid">
-          {displayItems.map((product, idx) => (
+          {pagedItems.map((product, idx) => (
             <div
               key={product._id}
               className="catalog-grid-cell"
@@ -489,6 +499,43 @@ const ProductsScreen = () => {
             </div>
           ))}
         </div>
+        {!loading && !error && totalPages > 1 ? (
+          <nav className="catalog-pagination" aria-label="Products pagination">
+            <button
+              type="button"
+              className="catalog-pagination__btn"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+            {paginationItems.map((entry, idx) =>
+              entry === '...' ? (
+                <span key={`dots-${idx}`} className="catalog-pagination__dots" aria-hidden>
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={`page-${entry}`}
+                  type="button"
+                  className={`catalog-pagination__btn${currentPage === entry ? ' catalog-pagination__btn--active' : ''}`}
+                  onClick={() => setCurrentPage(entry)}
+                  aria-current={currentPage === entry ? 'page' : undefined}
+                >
+                  {entry}
+                </button>
+              )
+            )}
+            <button
+              type="button"
+              className="catalog-pagination__btn"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </nav>
+        ) : null}
       </div>
       <CartFloating />
       {filterModal}

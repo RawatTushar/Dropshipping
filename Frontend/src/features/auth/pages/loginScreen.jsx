@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { goDashboardAfterAuth } from '../utils/goDashboardAfterAuth';
+import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
-import { authAPI } from '../api/api';
-import { persistUserSession } from '../utils/authSession';
-import { setCredentials } from '../features/auth/authSlice';
-import '../login.css';
+import { authAPI } from '../../../api/api';
+import { persistUserSession } from '../../../utils/authSession';
+import { setCredentials } from '../authSlice';
+import '../../../login.css';
 import { Link } from 'react-router-dom';
-import HideAndShow from '../components/hideAndShow';
-import SaveButton from '../components/saveButton';
-import CustomInput from '../components/customInput';
+import HideAndShow from '../../../components/hideAndShow';
+import SaveButton from '../../../components/saveButton';
+import CustomInput from '../../../components/customInput';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -20,12 +20,18 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [magicEmail, setMagicEmail] = useState('');
+  const [magicBusy, setMagicBusy] = useState(false);
+  const [magicMsg, setMagicMsg] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/home');
-    }
+    // Cookie-based auth: if we have a remembered user session, try loading /me.
+    const hasUser = Boolean(localStorage.getItem('userId') || localStorage.getItem('userEmail'));
+    if (!hasUser) return;
+    authAPI
+      .me()
+      .then(() => navigate('/home'))
+      .catch(() => undefined);
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -52,13 +58,31 @@ const Login = () => {
       }
 
       const { token, _id, name, email, isAdmin } = response.data;
-      persistUserSession({ token, _id, name, email, isAdmin });
-      dispatch(setCredentials({ token, _id, name, email, isAdmin }));
+      persistUserSession({ _id, name, email, isAdmin });
+      dispatch(setCredentials({ token: '', _id, name, email, isAdmin }));
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onSendMagicLink = async () => {
+    const email = magicEmail.trim();
+    if (!email) {
+      setMagicMsg('Enter your email to receive a sign-in link.');
+      return;
+    }
+    setMagicBusy(true);
+    setMagicMsg('');
+    try {
+      const { data } = await authAPI.sendMagicLink(email);
+      setMagicMsg(data?.message || 'Check your email for a sign-in link.');
+    } catch (err) {
+      setMagicMsg(err.response?.data?.message || 'Could not send sign-in link.');
+    } finally {
+      setMagicBusy(false);
     }
   };
 
@@ -102,6 +126,53 @@ const Login = () => {
      <div className="otp-login-option">
           <p><b>or</b></p>  
           <Link to="/login-otp" className="otp-link">Sign in with OTP</Link>
+        </div>
+
+        <div className="otp-login-option" style={{ marginTop: '0.75rem' }}>
+          <p><b>or</b></p>
+          <button
+            type="button"
+            className="login-btn"
+            onClick={() => {
+              const backend = 'http://localhost:4000/api';
+              window.location.assign(`${backend}/auth/google?next=/home`);
+            }}
+            style={{ width: '100%' }}
+          >
+            Continue with Google
+          </button>
+        </div>
+
+        <div className="otp-login-option" style={{ marginTop: '0.75rem' }}>
+          {/* <p><b>or</b></p> */}
+          <div style={{ width: '100%', maxWidth: 420 }}>
+            {/* <input
+              type="email"
+              value={magicEmail}
+              onChange={(e) => {
+                setMagicEmail(e.target.value);
+                setMagicMsg('');
+              }}
+              placeholder="Email for sign-in link"
+              className="login-input"
+              style={{ width: '100%', marginBottom: '10px' }}
+              autoComplete="email"
+            /> */}
+            {/* <button
+              type="button"
+              onClick={onSendMagicLink}
+              disabled={magicBusy}
+              className="login-btn"
+              style={{ width: '100%' }}
+            >
+              {magicBusy ? 'Sending…' : 'Email me a sign-in link'}
+            </button> */}
+            {magicMsg ? (
+              <div className="error-message" style={{ marginTop: '10px', background: 'transparent' }}>
+                {magicMsg}
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="login-footer">
           <p>Don't have an account? 

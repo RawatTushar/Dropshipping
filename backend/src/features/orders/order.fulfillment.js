@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Order = require("../models/Order");
-const Product = require("../models/Product");
+const Order = require("./order.model");
+const Product = require("../products/product.model");
 
 function normalizeOrderItemProductId(item) {
   const p = item?.product;
@@ -148,26 +148,13 @@ async function restoreInventoryFromCanceledOrder(order) {
   }
 
   await Promise.all(
-    [...merged.entries()].map(([productId, qty]) =>
-      Product.updateOne(
-        { _id: productId },
-        [
-          {
-            $set: {
-              countInStock: {
-                $add: [{ $ifNull: ["$countInStock", 0] }, qty],
-              },
-              soldCount: {
-                $max: [
-                  0,
-                  { $subtract: [{ $ifNull: ["$soldCount", 0] }, qty] },
-                ],
-              },
-            },
-          },
-        ]
-      )
-    )
+    [...merged.entries()].map(async ([productId, qty]) => {
+      const product = await Product.findById(productId);
+      if (!product) return;
+      product.countInStock = Number(product.countInStock || 0) + qty;
+      product.soldCount = Math.max(0, Number(product.soldCount || 0) - qty);
+      await product.save();
+    })
   );
 }
 

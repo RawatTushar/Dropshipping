@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { goDashboardAfterAuth } from '../utils/goDashboardAfterAuth';
+import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
-import { authAPI } from '../api/api';
-import { setCredentials } from '../features/auth/authSlice';
-import { persistUserSession } from '../utils/authSession';
-import '../login.css';
-import SaveButton from '../components/saveButton';
-import CustomInput from '../components/customInput';
+import { authAPI } from '../../../api/api';
+import { setCredentials } from '../authSlice';
+import { persistUserSession } from '../../../utils/authSession';
+import '../../../login.css';
+import SaveButton from '../../../components/saveButton';
+import CustomInput from '../../../components/customInput';
 
 const LoginOTP = () => {
   const dispatch = useDispatch();

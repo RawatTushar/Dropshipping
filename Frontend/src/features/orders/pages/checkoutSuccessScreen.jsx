@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import DashboardLayout from '../components/DashboardLayout';
-import { paymentsAPI, getApiErrorMessage } from '../api/api';
-import { clearCart } from '../features/cart/cartSlice';
-import { selectCurrentUserId } from '../features/auth/authSlice';
-import { fetchProducts } from '../features/products/productsSlice';
-import { fetchMyOrders } from '../features/orders/ordersSlice';
-import '../checkoutScreen.css';
+import DashboardLayout from '../../../components/DashboardLayout';
+import { paymentsAPI, getApiErrorMessage } from '../../../api/api';
+import { clearCart } from '../../cart/cartSlice';
+import { selectCurrentUserId } from '../../auth/authSlice';
+import { fetchProducts } from '../../products/productsSlice';
+import { fetchMyOrders } from '../ordersSlice';
+import '../../../checkoutScreen.css';
 
 const CheckoutSuccessScreen = () => {
   const dispatch = useDispatch();

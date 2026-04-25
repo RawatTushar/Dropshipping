@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/adminApi';
-import { getAdminInfo, isAdminUser, setAdminInfo } from '../utils/adminAuth';
+import { login } from '../../../api/adminApi';
+import { getAdminInfo, isAdminUser, setAdminInfo } from '../../../utils/adminAuth';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 
