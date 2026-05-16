@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:4000/api'
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
 /** Readable message for failed axios calls (network vs API JSON body). */
 export function getApiErrorMessage(err, fallback = 'Something went wrong.') {

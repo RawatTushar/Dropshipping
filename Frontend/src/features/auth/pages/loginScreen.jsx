@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import HideAndShow from '../../../components/hideAndShow';
 import SaveButton from '../../../components/saveButton';
 import CustomInput from '../../../components/customInput';
+import { API_BASE_URL } from '../../../shared/lib/api.js';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -134,8 +135,7 @@ const Login = () => {
             type="button"
             className="login-btn"
             onClick={() => {
-              const backend = 'http://localhost:4000/api';
-              window.location.assign(`${backend}/auth/google?next=/home`);
+              window.location.assign(`${API_BASE_URL}/auth/google?next=/home`);
             }}
             style={{ width: '100%' }}
           >

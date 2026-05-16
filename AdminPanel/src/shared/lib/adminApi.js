@@ -1,8 +1,11 @@
 import axios from 'axios';
 
 /** In dev, use same origin so Vite proxies `/api` to the backend (see vite.config.js). */
-const apiBase =
-  import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:4000');
+const apiBase = import.meta.env.DEV
+  ? ''
+  : import.meta.env.VITE_API_URL !== undefined
+    ? import.meta.env.VITE_API_URL
+    : 'http://localhost:4000';
 
 const axiosInstance = axios.create({
   baseURL: apiBase,
