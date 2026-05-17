@@ -15,6 +15,7 @@ import ProductDetailScreen from './features/products/pages/productDetailScreen';
 import CheckoutScreen from './features/orders/pages/checkoutScreen';
 import CheckoutSuccessScreen from './features/orders/pages/checkoutSuccessScreen';
 import MagicLogin from './features/auth/pages/magicLogin';
+import AuthSessionHydrator from './components/AuthSessionHydrator';
 
 const App = () => {
   const location = useLocation();
@@ -25,6 +26,7 @@ const App = () => {
 
   return (
     <div className="page-route-enter">
+      <AuthSessionHydrator />
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/login-otp" element={<LoginOtp />} />

@@ -18,7 +18,7 @@ const ProductDetailScreen = () => {
   const currency = useSelector(selectCurrentCurrency);
 
   useEffect(() => {
-    if (id) dispatch(fetchProductById(id));
+    if (id) dispatch(fetchProductById({ id }));
   }, [dispatch, id]);
 
   useEffect(() => {

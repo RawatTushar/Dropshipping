@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { selectCartCount } from '../features/cart/cartSlice';
 import { logout, selectCurrentUserId } from '../features/auth/authSlice';
+import { authAPI } from '../api/api';
 import { clearUserSession } from '../utils/authSession';
 import { fetchProducts } from '../features/products/productsSlice';
 import {
@@ -225,9 +226,14 @@ const DashboardLayout = ({
     if (!products.length && !productsLoading) dispatch(fetchProducts());
   }, [dispatch, orders.length, ordersLoading, products.length, productsLoading]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
     clearStoreSplash();
     setShowSplash(false);
+    try {
+      await authAPI.logout();
+    } catch {
+      /* clear client state even if the request fails */
+    }
     dispatch(logout());
     clearUserSession();
     navigate('/login');

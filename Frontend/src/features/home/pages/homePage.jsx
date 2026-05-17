@@ -3,9 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/DashboardLayout';
 import ModalHome from '../../../components/modalHome';
-import { authAPI } from '../../../api/api';
-import { persistUserSession } from '../../../utils/authSession';
-import { selectAuthUser, setCredentials } from '../../auth/authSlice';
+import { selectAuthUser } from '../../auth/authSlice';
 import { selectCurrentCurrency } from '../../preferences/currencySlice';
 import { fetchProducts } from '../../products/productsSlice';
 import { fetchMyOrders, selectOrders, selectOrdersError, selectOrdersLoading } from '../../orders/ordersSlice';
@@ -170,42 +168,8 @@ const Home = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data } = await authAPI.me();
-        if (cancelled) return;
-        persistUserSession({
-          token,
-          _id: data._id,
-          name: data.name,
-          email: data.email,
-          isAdmin: data.isAdmin,
-        });
-        dispatch(
-          setCredentials({
-            token,
-            _id: data._id,
-            name: data.name,
-            email: data.email,
-            isAdmin: data.isAdmin,
-          })
-        );
-        if (data.name) setUserName(data.name);
-      } catch {
-        if (!cancelled) {
-          setUserName(localStorage.getItem('userName') || '');
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [dispatch]);
+    setUserName(authUser?.name || localStorage.getItem('userName') || '');
+  }, [authUser?.name]);
 
   return (
     <DashboardLayout 

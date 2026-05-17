@@ -5,7 +5,8 @@ const COOKIE_NAME = "shipit_auth";
 const cookieOptions = () => ({
   httpOnly: true,
   sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
+  // Secure cookies are ignored on http:// (e.g. local Docker). Set COOKIE_SECURE=true only behind HTTPS.
+  secure: process.env.COOKIE_SECURE === "true",
   path: "/",
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 });

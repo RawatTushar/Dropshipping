@@ -58,9 +58,9 @@ const Login = () => {
         return;
       }
 
-      const { token, _id, name, email, isAdmin } = response.data;
-      persistUserSession({ _id, name, email, isAdmin });
-      dispatch(setCredentials({ token: '', _id, name, email, isAdmin }));
+      const { _id, name, email, isAdmin } = response.data;
+      await persistUserSession({ _id, name, email, isAdmin });
+      dispatch(setCredentials({ _id, name, email, isAdmin }));
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

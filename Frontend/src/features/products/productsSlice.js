@@ -1,28 +1,48 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { productsAPI, getApiErrorMessage } from '../../api/api';
+import { CACHE_TTL } from '../../shared/lib/httpCache';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (_, { rejectWithValue }) => {
+  async ({ force = false } = {}, { rejectWithValue, getState }) => {
     try {
-      const { data } = await productsAPI.getAll();
+      const { items, lastFetchedAt } = getState().products;
+      const fresh =
+        !force &&
+        items.length > 0 &&
+        lastFetchedAt &&
+        Date.now() - lastFetchedAt < CACHE_TTL.products;
+
+      if (fresh) return items;
+
+      const { data } = await productsAPI.getAll({ force });
       return data;
     } catch (err) {
       return rejectWithValue(getApiErrorMessage(err, 'Failed to load products'));
     }
-  }
+  },
 );
 
 export const fetchProductById = createAsyncThunk(
   'products/fetchProductById',
-  async (id, { rejectWithValue }) => {
+  async ({ id, force = false }, { rejectWithValue, getState }) => {
     try {
-      const { data } = await productsAPI.getById(id);
+      const selected = getState().products.selectedProduct;
+      if (
+        !force &&
+        selected?._id === id &&
+        getState().products.lastDetailFetchedAt &&
+        Date.now() - getState().products.lastDetailFetchedAt < CACHE_TTL.productDetail
+      ) {
+        return selected;
+      }
+
+      const { data } = await productsAPI.getById(id, { force });
       return data;
     } catch (err) {
       return rejectWithValue(getApiErrorMessage(err, 'Failed to load product details'));
     }
-  }
+  },
 );
 
 const productsSlice = createSlice({
@@ -35,6 +55,7 @@ const productsSlice = createSlice({
     error: '',
     detailsError: '',
     lastFetchedAt: null,
+    lastDetailFetchedAt: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -59,6 +80,7 @@ const productsSlice = createSlice({
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loadingDetails = false;
         state.selectedProduct = action.payload || null;
+        state.lastDetailFetchedAt = Date.now();
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loadingDetails = false;

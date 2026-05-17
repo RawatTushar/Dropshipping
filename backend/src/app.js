@@ -7,6 +7,7 @@ const adminRoutes = require("./features/admin/admin.routes");
 const productRoutes = require("./features/products/product.routes");
 const orderRoutes = require("./features/orders/order.routes");
 const paymentRoutes = require("./features/payments/payment.routes");
+const httpCache = require("./common/middleware/httpCache");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(httpCache);
 
 // routes
 app.use("/api/auth", authRoutes);

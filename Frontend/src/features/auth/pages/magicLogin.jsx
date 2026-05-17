@@ -14,9 +14,9 @@ const MagicLogin = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const linkToken = searchParams.get('token');
     const email = searchParams.get('email');
-    if (!token || !email) {
+    if (!linkToken || !email) {
       setStatus('error');
       setMessage('Invalid sign-in link. Please request a new one.');
       return;
@@ -24,10 +24,10 @@ const MagicLogin = () => {
 
     (async () => {
       try {
-        const { data } = await authAPI.verifyMagicLink(email, token);
+        const { data } = await authAPI.verifyMagicLink(email, linkToken);
         const { _id, name, isAdmin } = data || {};
-        persistUserSession({ _id, name, email, isAdmin });
-        dispatch(setCredentials({ _id, name, email, isAdmin, token: '' }));
+        await persistUserSession({ _id, name, email, isAdmin });
+        dispatch(setCredentials({ _id, name, email, isAdmin }));
         setStatus('success');
         setMessage('Signed in successfully. Redirecting…');
         window.setTimeout(() => navigate('/home', { replace: true }), 600);

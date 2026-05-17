@@ -71,9 +71,9 @@ const Register = () => {
       }
 
       // Fallback for direct registration (if email confirmation is disabled)
-      const { token, _id, name, email, isAdmin } = response.data;
-      persistUserSession({ token, _id, name, email, isAdmin });
-      dispatch(setCredentials({ token, _id, name, email, isAdmin }));
+      const { _id, name, email, isAdmin } = response.data;
+      await persistUserSession({ _id, name, email, isAdmin });
+      dispatch(setCredentials({ _id, name, email, isAdmin }));
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');

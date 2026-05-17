@@ -55,9 +55,9 @@ const LoginOTP = () => {
     try {
       // Call API to verify OTP
       const response = await authAPI.verifyOTP({ email, otp });
-      const { token, _id, name, email: accountEmail, isAdmin } = response.data;
-      persistUserSession({ token, _id, name, email: accountEmail, isAdmin });
-      dispatch(setCredentials({ token, _id, name, email: accountEmail, isAdmin }));
+      const { _id, name, email: accountEmail, isAdmin } = response.data;
+      await persistUserSession({ _id, name, email: accountEmail, isAdmin });
+      dispatch(setCredentials({ _id, name, email: accountEmail, isAdmin }));
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP. Please try again.');

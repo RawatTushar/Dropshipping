@@ -60,10 +60,9 @@ const SettingScreen = () => {
     localStorage.setItem(storeNameStorageKey(userId), storeName.trim() || DEFAULT_STORE_NAME);
     window.dispatchEvent(new Event('shipit-store-prefs'));
 
-    if (authUser?.token) {
+    if (authUser?._id || authUser?.email) {
       dispatch(
         setCredentials({
-          token: authUser.token,
           _id: authUser._id,
           name: profileName.trim() || authUser.name,
           email: profileEmail.trim() || authUser.email,

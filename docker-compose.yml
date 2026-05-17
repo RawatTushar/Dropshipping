@@ -23,6 +23,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
+      COOKIE_SECURE: "false"
       FRONTEND_URL: http://localhost:5173
       CLIENT_URL: http://localhost:3001
     depends_on:
