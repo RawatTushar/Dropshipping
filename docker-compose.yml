@@ -2,6 +2,7 @@ services:
   gateway:
     build:
       context: ./gateway-nginx
+    container_name: dropshipping-gateway
     ports:
       - "80:80"
     depends_on:
@@ -11,14 +12,14 @@ services:
     restart: unless-stopped
 
   mongo:
-    profiles: [local-mongo]
     image: mongo:7
     container_name: dropshipping-mongo
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     expose:
       - "27017"
+    # Optional: MongoDB Compass / mongosh from your machine (not via port 80)
+    ports:
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -31,18 +32,18 @@ services:
   backend:
     build:
       context: ./backend
+    container_name: dropshipping-backend
     expose:
       - "4000"
     env_file:
       - ./backend/.env
     environment:
       COOKIE_SECURE: "false"
-      FRONTEND_URL: http://localhost
-      CLIENT_URL: http://localhost/admin
+      FRONTEND_URL: ${FRONTEND_URL:-http://16.171.135.147}
+      CLIENT_URL: ${CLIENT_URL:-http://16.171.135.147/admin}
     depends_on:
       mongo:
         condition: service_healthy
-        required: false
     restart: unless-stopped
 
   frontend:
@@ -50,6 +51,7 @@ services:
       context: ./Frontend
       args:
         VITE_API_URL: /api
+    container_name: dropshipping-frontend
     expose:
       - "80"
     depends_on:
@@ -61,6 +63,7 @@ services:
       context: ./AdminPanel
       args:
         VITE_API_URL: ""
+    container_name: dropshipping-admin
     expose:
       - "80"
     depends_on:

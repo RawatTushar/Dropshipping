@@ -8,7 +8,6 @@ RUN npm ci
 
 COPY . .
 
-# Empty string = same-origin; nginx proxies /api to the backend service
 ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 

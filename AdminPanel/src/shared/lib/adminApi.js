@@ -8,6 +8,7 @@ const apiBase = import.meta.env.DEV
 
 const axiosInstance = axios.create({
   baseURL: apiBase,
+  withCredentials: true,
 });
 export const login = async (email, password) => {
   const { data } = await axiosInstance.post(

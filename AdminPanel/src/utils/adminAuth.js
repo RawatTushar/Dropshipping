@@ -24,12 +24,12 @@ export const clearAdminInfo = () => {
 
 export const getAuthConfig = () => {
   const admin = getAdminInfo();
-  if (!admin?.token) return null;
+  if (!isAdminUser(admin)) return null;
 
-  return {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${admin.token}`,
-    },
-  };
+  const headers = { 'Content-Type': 'application/json' };
+  if (admin?.token) {
+    headers.Authorization = `Bearer ${admin.token}`;
+  }
+
+  return { headers, withCredentials: true };
 };

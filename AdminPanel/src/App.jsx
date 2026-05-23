@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import DashboardScreen from './screens/DashboardScreen';
 import ProductsScreen from './screens/ProductsScreen';
@@ -10,12 +10,14 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginScreen />} />
-      <Route path="/" element={<Layout />}>
-        <Route index element={<DashboardScreen />} />
+      <Route element={<Layout />}>
+        <Route path="dashboard" element={<DashboardScreen />} />
         <Route path="products" element={<ProductsScreen />} />
         <Route path="products/new" element={<ProductEditScreen isNew />} />
         <Route path="products/:id/edit" element={<ProductEditScreen />} />
       </Route>
+      <Route index element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

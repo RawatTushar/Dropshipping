@@ -13,9 +13,13 @@ const LoginScreen = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const existing = getAdminInfo();
-    if (isAdminUser(existing)) {
-      navigate('/');
+    try {
+      const existing = getAdminInfo();
+      if (isAdminUser(existing)) {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch {
+      localStorage.removeItem('adminInfo');
     }
   }, [navigate]);
 
@@ -29,8 +33,11 @@ const LoginScreen = () => {
 
       // Verify the user is actually an admin before letting them in
       if (isAdminUser(data)) {
-        setAdminInfo(data);
-        navigate('/');
+        setAdminInfo({
+          ...data,
+          token: data.token || '',
+        });
+        navigate('/dashboard');
       } else {
         setError("You are not authorized as an admin. Contact support.");
       }
