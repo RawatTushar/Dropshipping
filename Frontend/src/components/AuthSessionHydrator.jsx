@@ -1,20 +1,19 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
-import { logout, setCredentials } from '../features/auth/authSlice';
+import { logout, setCredentials, setSessionReady } from '../features/auth/authSlice';
 import { clearUserSession, persistUserSession } from '../utils/authSession';
 
-/** Validates httpOnly cookie via /me and syncs Redux profile from the server. */
+/**
+ * On every load, validates the httpOnly auth cookie via GET /auth/me and syncs Redux.
+ * Works for email login, OTP, magic link, and Google (cookie-only, no localStorage yet).
+ */
 const AuthSessionHydrator = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const hasProfile = Boolean(
-      localStorage.getItem('userId') || localStorage.getItem('userEmail'),
-    );
-    if (!hasProfile) return;
-
     let cancelled = false;
+
     (async () => {
       try {
         const { data } = await authAPI.me();
@@ -33,11 +32,16 @@ const AuthSessionHydrator = () => {
             isAdmin: data.isAdmin,
           }),
         );
-      } catch {
-        if (!cancelled) {
+      } catch (err) {
+        if (cancelled) return;
+        const status = err.response?.status;
+        // Only clear session when the server rejects auth — not on network blips.
+        if (status === 401 || status === 403) {
           clearUserSession();
           dispatch(logout());
         }
+      } finally {
+        if (!cancelled) dispatch(setSessionReady());
       }
     })();
 

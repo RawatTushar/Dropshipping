@@ -4,7 +4,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CreditCard, Truck } from 'lucide-react';
 import DashboardLayout from '../../../components/DashboardLayout';
 import { clearCart, selectCartItems, selectCartSubtotal } from '../../cart/cartSlice';
-import { selectCurrentUserId, selectIsAuthenticated } from '../../auth/authSlice';
+import {
+  selectCurrentUserId,
+  selectIsAuthenticated,
+  selectSessionReady,
+} from '../../auth/authSlice';
 import { selectCurrentCurrency } from '../../preferences/currencySlice';
 import {
   createOrder,
@@ -68,8 +72,12 @@ const CheckoutScreen = () => {
   }, [canceled, setSearchParams]);
 
   const canSubmit = useMemo(
-    () => items.length > 0 && address.trim().length > 8 && isAuthenticated,
-    [items.length, address, isAuthenticated],
+    () =>
+      sessionReady &&
+      items.length > 0 &&
+      address.trim().length > 8 &&
+      isAuthenticated,
+    [sessionReady, items.length, address, isAuthenticated],
   );
 
   const busy = creatingOrder || stripeRedirecting;
@@ -103,6 +111,10 @@ const CheckoutScreen = () => {
     e.preventDefault();
     setError('');
 
+    if (!sessionReady) {
+      setError('Checking your sign-in status…');
+      return;
+    }
     if (!isAuthenticated) {
       setError('Please sign in to place an order.');
       return;
@@ -160,7 +172,7 @@ const CheckoutScreen = () => {
   return (
     <DashboardLayout title="Checkout" subtitle="Review your bag, choose payment, and confirm delivery">
       <div className="checkout-page">
-        {!isAuthenticated ? (
+        {sessionReady && !isAuthenticated ? (
           <div className="checkout-banner checkout-banner--warn">
             <p>
               <strong>Sign in required</strong> to place an order.{' '}
