@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../../api/adminApi';
+import { getAdminApiErrorMessage, login } from '../../../shared/lib/adminApi';
 import { getAdminInfo, isAdminUser, setAdminInfo } from '../../../utils/adminAuth';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -31,20 +31,27 @@ const LoginScreen = () => {
 
       const data = await login(email, password);
 
-      // Verify the user is actually an admin before letting them in
+      if (data?.requiresConfirmation) {
+        setError('Please confirm your email before logging in.');
+        setLoading(false);
+        return;
+      }
+
       if (isAdminUser(data)) {
         setAdminInfo({
           ...data,
           token: data.token || '',
         });
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       } else {
-        setError("You are not authorized as an admin. Contact support.");
+        setError(
+          'Login succeeded but this account is not an admin. On EC2 run: docker compose exec backend node src/scripts/promoteAdmin.js your@email.com',
+        );
       }
-      
+
       setLoading(false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(getAdminApiErrorMessage(err, 'Invalid email or password'));
       setLoading(false);
     }
   };

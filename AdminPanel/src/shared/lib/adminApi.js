@@ -1,21 +1,34 @@
 import axios from 'axios';
 
-/** In dev, use same origin so Vite proxies `/api` to the backend (see vite.config.js). */
 /** Same origin in prod (gateway /api); Vite proxy in dev. */
 const apiBase = import.meta.env.DEV
   ? ''
   : (import.meta.env.VITE_API_URL ?? '');
 
+export function getAdminApiErrorMessage(err, fallback = 'Request failed.') {
+  const data = err.response?.data;
+  if (data && typeof data.message === 'string') return data.message;
+  if (typeof data === 'string' && data.length < 500) return data;
+  const msg = err.message || '';
+  if (msg === 'Network Error' || err.code === 'ERR_NETWORK') {
+    return 'Cannot reach the API. Check that the backend is running and /api is proxied correctly.';
+  }
+  return msg || fallback;
+}
+
 const axiosInstance = axios.create({
   baseURL: apiBase,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
+
 export const login = async (email, password) => {
-  const { data } = await axiosInstance.post(
-    '/api/auth/login',
-    { email, password },
-    { headers: { 'Content-Type': 'application/json' } }
-  );
+  const { data } = await axiosInstance.post('/api/auth/login', {
+    email: String(email).trim().toLowerCase(),
+    password,
+  });
   return data;
 };
 
@@ -48,3 +61,5 @@ export const getAdminInsights = async (config) => {
   const { data } = await axiosInstance.get('/api/admin/insights', config);
   return data;
 };
+
+export default axiosInstance;

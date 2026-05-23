@@ -11,8 +11,13 @@ const cookieOptions = () => ({
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 });
 
-const signToken = (userId) =>
-  jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "30d" });
+const signToken = (userId) => {
+  const secret = process.env.JWT_SECRET?.trim();
+  if (!secret) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+  return jwt.sign({ id: userId }, secret, { expiresIn: "30d" });
+};
 
 const setAuthCookie = (res, userId) => {
   const token = signToken(userId);

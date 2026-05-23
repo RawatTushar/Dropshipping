@@ -112,7 +112,21 @@ const confirmEmail = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    if (!process.env.JWT_SECRET?.trim()) {
+      return res.status(500).json({
+        message: "Server misconfigured: JWT_SECRET is missing in backend/.env",
+      });
+    }
+
+    const email = String(req.body?.email || "")
+      .trim()
+      .toLowerCase();
+    const password = req.body?.password;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user) {

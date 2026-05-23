@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const { createCorsOptions } = require("./common/corsOrigins");
 
 const authRoutes = require("./features/auth/auth.routes");
 const adminRoutes = require("./features/admin/admin.routes");
@@ -11,16 +12,10 @@ const httpCache = require("./common/middleware/httpCache");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // middleware
-app.use(
-  cors({
-    origin: [
-      process.env.FRONTEND_URL || "http://localhost:5173",
-      process.env.CLIENT_URL,
-    ].filter(Boolean),
-    credentials: true,
-  })
-);
+app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
 app.use(httpCache);
@@ -31,6 +26,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
+});
 
 app.get("/", (req, res) => {
   res.send("API running");

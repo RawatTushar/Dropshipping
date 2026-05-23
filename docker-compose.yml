@@ -41,6 +41,7 @@ services:
       COOKIE_SECURE: "false"
       FRONTEND_URL: ${FRONTEND_URL:-http://16.171.135.147}
       CLIENT_URL: ${CLIENT_URL:-http://16.171.135.147/admin}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://16.171.135.147}
     depends_on:
       mongo:
         condition: service_healthy
