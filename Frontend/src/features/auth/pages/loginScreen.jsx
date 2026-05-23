@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../../../api/api';
+import { setAccessToken } from '../../../utils/authMemory';
 import { persistUserSession } from '../../../utils/authSession';
 import { verifyAuthSession } from '../../../utils/verifyAuthSession';
 import { logout, setCredentials } from '../authSlice';
@@ -59,7 +60,8 @@ const Login = () => {
         return;
       }
 
-      const { _id, name, email, isAdmin } = response.data;
+      const { _id, name, email, isAdmin, token } = response.data;
+      if (token) setAccessToken(token);
       persistUserSession({ _id, name, email, isAdmin });
       dispatch(setCredentials({ _id, name, email, isAdmin }));
 

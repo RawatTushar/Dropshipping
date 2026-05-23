@@ -1,4 +1,5 @@
 import { invalidateHttpCache } from '../shared/lib/httpCache';
+import { clearAccessToken } from './authMemory';
 
 /** Old insecure storage — removed on load; JWT must only live in httpOnly cookie. */
 const LEGACY_TOKEN_KEYS = ['authToken', 'authTokenEnc'];
@@ -34,6 +35,7 @@ export function loadUserSession() {
 export function clearUserSession() {
   invalidateHttpCache();
   purgeStoredTokens();
+  clearAccessToken();
   localStorage.removeItem('userId');
   localStorage.removeItem('userName');
   localStorage.removeItem('userEmail');

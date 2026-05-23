@@ -148,6 +148,7 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
+        token: generateToken(user._id),
       });
     } else {
       res.status(401).json({ message: "Invalid email or password" });
@@ -252,6 +253,7 @@ const verifyLoginOtp = async (req, res) => {
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+      token: generateToken(user._id),
     });
   } catch (err) {
     console.error("verifyLoginOtp:", err);
@@ -338,6 +340,7 @@ const verifyMagicLink = async (req, res) => {
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+      token: generateToken(user._id),
     });
   } catch (err) {
     console.error("verifyMagicLink:", err);

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getAccessToken } from '../../utils/authMemory'
 import { CACHE_TTL, cachedGet, invalidateHttpCache } from './httpCache'
 
 export { invalidateHttpCache }
@@ -33,7 +34,14 @@ const api = axios.create({
   }
 })
 
-// Auth: httpOnly cookie `shipit_auth` only (withCredentials). Not readable by JS — XSS-safe.
+// Primary: httpOnly cookie. Fallback: in-memory Bearer from login (never persisted).
+api.interceptors.request.use((config) => {
+  const token = getAccessToken()
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 // Auth API calls
 export const authAPI = {

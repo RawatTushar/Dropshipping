@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../../../api/api';
-import { setCredentials } from '../authSlice';
+import { setAccessToken } from '../../../utils/authMemory';
 import { persistUserSession } from '../../../utils/authSession';
+import { verifyAuthSession } from '../../../utils/verifyAuthSession';
+import { logout, setCredentials } from '../authSlice';
 import '../../../login.css';
 import SaveButton from '../../../components/saveButton';
 import CustomInput from '../../../components/customInput';
@@ -55,9 +57,18 @@ const LoginOTP = () => {
     try {
       // Call API to verify OTP
       const response = await authAPI.verifyOTP({ email, otp });
-      const { _id, name, email: accountEmail, isAdmin } = response.data;
-      await persistUserSession({ _id, name, email: accountEmail, isAdmin });
+      const { _id, name, email: accountEmail, isAdmin, token } = response.data;
+      if (token) setAccessToken(token);
+      persistUserSession({ _id, name, email: accountEmail, isAdmin });
       dispatch(setCredentials({ _id, name, email: accountEmail, isAdmin }));
+
+      const session = await verifyAuthSession();
+      if (!session.ok) {
+        dispatch(logout());
+        setError(session.message);
+        return;
+      }
+
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP. Please try again.');

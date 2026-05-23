@@ -2,11 +2,16 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
 import { logout, setCredentials, setSessionReady } from '../features/auth/authSlice';
-import { clearUserSession, persistUserSession, purgeStoredTokens } from '../utils/authSession';
+import {
+  clearUserSession,
+  loadUserSession,
+  persistUserSession,
+  purgeStoredTokens,
+} from '../utils/authSession';
+import { clearAccessToken } from '../utils/authMemory';
 
 /**
- * Validates the httpOnly session cookie via GET /auth/me (withCredentials).
- * No JWT in localStorage — cookie cannot be read by JavaScript (XSS-safe).
+ * Validates session via GET /auth/me (cookie + optional in-memory Bearer).
  */
 const AuthSessionHydrator = () => {
   const dispatch = useDispatch();
@@ -20,6 +25,7 @@ const AuthSessionHydrator = () => {
       try {
         const { data } = await authAPI.me();
         if (cancelled) return;
+        clearAccessToken();
         persistUserSession({
           _id: data._id,
           name: data.name,
@@ -38,8 +44,13 @@ const AuthSessionHydrator = () => {
         if (cancelled) return;
         const status = err.response?.status;
         if (status === 401 || status === 403) {
-          clearUserSession();
-          dispatch(logout());
+          const cached = loadUserSession();
+          if (cached) {
+            dispatch(setCredentials(cached));
+          } else {
+            clearUserSession();
+            dispatch(logout());
+          }
         }
       } finally {
         if (!cancelled) dispatch(setSessionReady());

@@ -8,7 +8,9 @@ import {
   selectCurrentUserId,
   selectIsAuthenticated,
   selectSessionReady,
+  setCredentials,
 } from '../../auth/authSlice';
+import { authAPI } from '../../../api/api';
 import { selectCurrentCurrency } from '../../preferences/currencySlice';
 import {
   createOrder,
@@ -28,6 +30,7 @@ const CheckoutScreen = () => {
   const subtotal = useSelector(selectCartSubtotal);
   const userId = useSelector(selectCurrentUserId);
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const sessionReady = useSelector(selectSessionReady);
   const currency = useSelector(selectCurrentCurrency);
   const creatingOrder = useSelector(selectOrderCreating);
   const createOrderError = useSelector(selectOrderCreateError);
@@ -60,6 +63,31 @@ const CheckoutScreen = () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!sessionReady || isAuthenticated) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await authAPI.me();
+        if (!cancelled) {
+          dispatch(
+            setCredentials({
+              _id: data._id,
+              name: data.name,
+              email: data.email,
+              isAdmin: data.isAdmin,
+            }),
+          );
+        }
+      } catch {
+        /* banner + login link stay visible */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, sessionReady, isAuthenticated]);
 
   useEffect(() => {
     if (canceled) {
