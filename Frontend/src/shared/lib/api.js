@@ -33,7 +33,7 @@ const api = axios.create({
   }
 })
 
-// Auth via httpOnly cookie (`shipit_auth`); withCredentials sends it on every request.
+// Auth: httpOnly cookie `shipit_auth` only (withCredentials). Not readable by JS — XSS-safe.
 
 // Auth API calls
 export const authAPI = {

@@ -2,16 +2,18 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/api';
 import { logout, setCredentials, setSessionReady } from '../features/auth/authSlice';
-import { clearUserSession, persistUserSession } from '../utils/authSession';
+import { clearUserSession, persistUserSession, purgeStoredTokens } from '../utils/authSession';
 
 /**
- * On every load, validates the httpOnly auth cookie via GET /auth/me and syncs Redux.
- * Works for email login, OTP, magic link, and Google (cookie-only, no localStorage yet).
+ * Validates the httpOnly session cookie via GET /auth/me (withCredentials).
+ * No JWT in localStorage — cookie cannot be read by JavaScript (XSS-safe).
  */
 const AuthSessionHydrator = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    purgeStoredTokens();
+
     let cancelled = false;
 
     (async () => {
@@ -35,7 +37,6 @@ const AuthSessionHydrator = () => {
       } catch (err) {
         if (cancelled) return;
         const status = err.response?.status;
-        // Only clear session when the server rejects auth — not on network blips.
         if (status === 401 || status === 403) {
           clearUserSession();
           dispatch(logout());

@@ -32,6 +32,10 @@ export const login = async (email, password) => {
   return data;
 };
 
+export const authMe = () => axiosInstance.get('/api/auth/me');
+
+export const authLogout = () => axiosInstance.post('/api/auth/logout');
+
 export const getProducts = async () => {
   const { data } = await axiosInstance.get('/api/products');
   return data;
@@ -42,23 +46,23 @@ export const getProductById = async (id) => {
   return data;
 };
 
-export const createProduct = async (productData, config) => {
-  const { data } = await axiosInstance.post('/api/products', productData, config);
+export const createProduct = async (productData) => {
+  const { data } = await axiosInstance.post('/api/products', productData);
   return data;
 };
 
-export const updateProduct = async (id, productData, config) => {
-  const { data } = await axiosInstance.put(`/api/products/${id}`, productData, config);
+export const updateProduct = async (id, productData) => {
+  const { data } = await axiosInstance.put(`/api/products/${id}`, productData);
   return data;
 };
 
-export const deleteProduct = async (id, config) => {
-  const { data } = await axiosInstance.delete(`/api/products/${id}`, config);
+export const deleteProduct = async (id) => {
+  const { data } = await axiosInstance.delete(`/api/products/${id}`);
   return data;
 };
 
-export const getAdminInsights = async (config) => {
-  const { data } = await axiosInstance.get('/api/admin/insights', config);
+export const getAdminInsights = async () => {
+  const { data } = await axiosInstance.get('/api/admin/insights');
   return data;
 };
 

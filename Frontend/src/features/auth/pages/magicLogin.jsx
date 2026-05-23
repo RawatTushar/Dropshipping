@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { authAPI, getApiErrorMessage } from '../../../api/api';
 import { persistUserSession } from '../../../utils/authSession';
-import { setCredentials } from '../authSlice';
+import { verifyAuthSession } from '../../../utils/verifyAuthSession';
+import { logout, setCredentials } from '../authSlice';
 import '../../../login.css';
 
 const MagicLogin = () => {
@@ -26,8 +27,17 @@ const MagicLogin = () => {
       try {
         const { data } = await authAPI.verifyMagicLink(email, linkToken);
         const { _id, name, isAdmin } = data || {};
-        await persistUserSession({ _id, name, email, isAdmin });
+        persistUserSession({ _id, name, email, isAdmin });
         dispatch(setCredentials({ _id, name, email, isAdmin }));
+
+        const session = await verifyAuthSession();
+        if (!session.ok) {
+          dispatch(logout());
+          setStatus('error');
+          setMessage(session.message);
+          return;
+        }
+
         setStatus('success');
         setMessage('Signed in successfully. Redirecting…');
         window.setTimeout(() => navigate('/home', { replace: true }), 600);

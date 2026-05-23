@@ -4,7 +4,8 @@ import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI, getApiErrorMessage } from '../../../api/api';
 import { persistUserSession } from '../../../utils/authSession';
-import { setCredentials } from '../authSlice';
+import { verifyAuthSession } from '../../../utils/verifyAuthSession';
+import { logout, setCredentials } from '../authSlice';
 import '../../../login.css';
 import SaveButton from '../../../components/saveButton';
 import CustomInput from '../../../components/customInput';
@@ -52,8 +53,16 @@ const EnterOTP = () => {
     try {
       const response = await authAPI.verifyOTP({ email: email.trim(), otp });
       const { _id, name, email: accountEmail, isAdmin } = response.data;
-      await persistUserSession({ _id, name, email: accountEmail, isAdmin });
+      persistUserSession({ _id, name, email: accountEmail, isAdmin });
       dispatch(setCredentials({ _id, name, email: accountEmail, isAdmin }));
+
+      const session = await verifyAuthSession();
+      if (!session.ok) {
+        dispatch(logout());
+        setError(session.message);
+        return;
+      }
+
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Invalid OTP. Please try again.'));

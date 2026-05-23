@@ -5,7 +5,7 @@ import {
   getProductById,
   updateProduct,
 } from '../../../api/adminApi';
-import { clearAdminInfo, getAuthConfig } from '../../../utils/adminAuth';
+import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Image as ImageIcon } from 'lucide-react';
 
@@ -63,12 +63,10 @@ const ProductEditScreen = ({ isNew = false }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const config = getAuthConfig();
-
-      if (!config) {
-          alert("Please login first as an admin to perform this action.");
-          navigate('/login');
-          return;
+      if (!isAdminUser(getAdminInfo())) {
+        alert('Please login first as an admin to perform this action.');
+        navigate('/login');
+        return;
       }
 
       const costNum = costPrice === '' ? null : Number(costPrice);
@@ -85,9 +83,9 @@ const ProductEditScreen = ({ isNew = false }) => {
       };
 
       if (isCreateMode) {
-        await createProduct(productData, config);
+        await createProduct(productData);
       } else {
-        await updateProduct(id, productData, config);
+        await updateProduct(id, productData);
       }
 
       setLoading(false);

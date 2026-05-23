@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAdminInsights } from '../../../api/adminApi';
-import { clearAdminInfo, getAdminInfo, getAuthConfig, isAdminUser } from '../../../utils/adminAuth';
+import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import './DashboardScreen.css';
 import { motion } from 'framer-motion';
 import { RefreshCw, ArrowRight } from 'lucide-react';
@@ -46,8 +46,7 @@ const DashboardScreen = () => {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const config = getAuthConfig();
-    if (!config) {
+    if (!isAdminUser(getAdminInfo())) {
       clearAdminInfo();
       navigate('/login');
       return;
@@ -55,7 +54,7 @@ const DashboardScreen = () => {
     try {
       setLoading(true);
       setError('');
-      const data = await getAdminInsights(config);
+      const data = await getAdminInsights();
       setInsights(data);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {

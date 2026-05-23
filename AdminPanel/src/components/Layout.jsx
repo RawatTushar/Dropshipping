@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { authLogout } from '../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../utils/adminAuth';
 import SplashScreen from './SplashScreen';
 import { LayoutDashboard, Package, LogOut, LayoutGrid, Sun, Moon } from 'lucide-react';
@@ -25,7 +26,12 @@ const Layout = () => {
     }
   }, [isAuthorized]);
 
-  const logoutHandler = () => {
+  const logoutHandler = async () => {
+    try {
+      await authLogout();
+    } catch {
+      /* clear client either way */
+    }
     clearAdminInfo();
     sessionStorage.removeItem('splashShown');
     navigate('/login');

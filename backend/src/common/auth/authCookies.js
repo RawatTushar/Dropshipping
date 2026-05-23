@@ -9,6 +9,7 @@ const cookieOptions = () => ({
   secure: process.env.COOKIE_SECURE === "true",
   path: "/",
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  // Session JWT never exposed to JavaScript — mitigates XSS token theft.
 });
 
 const signToken = (userId) => {

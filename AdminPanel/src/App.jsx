@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
+import AdminSessionHydrator from './components/AdminSessionHydrator';
 import Layout from './components/Layout';
 import DashboardScreen from './screens/DashboardScreen';
 import ProductsScreen from './screens/ProductsScreen';
@@ -8,7 +9,9 @@ import LoginScreen from './screens/LoginScreen';
 
 function App() {
   return (
-    <Routes>
+    <>
+      <AdminSessionHydrator />
+      <Routes>
       <Route path="/login" element={<LoginScreen />} />
       <Route element={<Layout />}>
         <Route path="dashboard" element={<DashboardScreen />} />
@@ -19,6 +22,7 @@ function App() {
       <Route index element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }
 

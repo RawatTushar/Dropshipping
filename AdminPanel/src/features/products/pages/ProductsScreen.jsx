@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteProduct, getProducts } from '../../../api/adminApi';
-import { clearAdminInfo, getAuthConfig } from '../../../utils/adminAuth';
+import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 
@@ -35,15 +35,13 @@ const ProductsScreen = () => {
   const deleteHandler = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const config = getAuthConfig();
-
-        if (!config) {
-            alert("Please login first as an admin to perform this action.");
-            navigate('/login');
-            return;
+        if (!isAdminUser(getAdminInfo())) {
+          alert('Please login first as an admin to perform this action.');
+          navigate('/login');
+          return;
         }
 
-        await deleteProduct(id, config);
+        await deleteProduct(id);
         
         // Refresh standard list
         setProducts((prev) => prev.filter((p) => p._id !== id));

@@ -4,7 +4,8 @@ import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../../../api/api';
 import { persistUserSession } from '../../../utils/authSession';
-import { setCredentials } from '../authSlice';
+import { verifyAuthSession } from '../../../utils/verifyAuthSession';
+import { logout, setCredentials } from '../authSlice';
 import '../../../login.css';
 import { Link } from 'react-router-dom';
 import HideAndShow from '../../../components/hideAndShow';
@@ -59,8 +60,16 @@ const Login = () => {
       }
 
       const { _id, name, email, isAdmin } = response.data;
-      await persistUserSession({ _id, name, email, isAdmin });
+      persistUserSession({ _id, name, email, isAdmin });
       dispatch(setCredentials({ _id, name, email, isAdmin }));
+
+      const session = await verifyAuthSession();
+      if (!session.ok) {
+        dispatch(logout());
+        setError(session.message);
+        return;
+      }
+
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

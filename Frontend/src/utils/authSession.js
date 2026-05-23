@@ -1,8 +1,16 @@
 import { invalidateHttpCache } from '../shared/lib/httpCache';
 
-/** Profile fields in localStorage; JWT lives in httpOnly cookie (`shipit_auth`) set by the backend. */
+/** Old insecure storage — removed on load; JWT must only live in httpOnly cookie. */
 const LEGACY_TOKEN_KEYS = ['authToken', 'authTokenEnc'];
 
+/** Drop any JWT from localStorage (XSS-safe auth uses httpOnly `shipit_auth` cookie only). */
+export function purgeStoredTokens() {
+  for (const key of LEGACY_TOKEN_KEYS) {
+    localStorage.removeItem(key);
+  }
+}
+
+/** Non-sensitive profile for UI; not used for API authorization. */
 export function persistUserSession({ _id, name, email, isAdmin }) {
   if (_id != null && _id !== '') localStorage.setItem('userId', _id);
   if (name != null && name !== '') localStorage.setItem('userName', name);
@@ -25,7 +33,7 @@ export function loadUserSession() {
 
 export function clearUserSession() {
   invalidateHttpCache();
-  for (const key of LEGACY_TOKEN_KEYS) localStorage.removeItem(key);
+  purgeStoredTokens();
   localStorage.removeItem('userId');
   localStorage.removeItem('userName');
   localStorage.removeItem('userEmail');
