@@ -48,12 +48,10 @@ export const authAPI = {
   verifyMagicLink: (email, token) => api.post('/auth/magic-link/verify', { email, token }),
 }
 
-// Products API calls
+// Products API calls — always fetch fresh so admin price/stock edits show on the store
 export const productsAPI = {
-  getAll: ({ force = false } = {}) =>
-    cachedGet(api, '/products', { ttlMs: CACHE_TTL.products, force }),
-  getById: (id, { force = false } = {}) =>
-    cachedGet(api, `/products/${id}`, { ttlMs: CACHE_TTL.productDetail, force }),
+  getAll: () => api.get('/products'),
+  getById: (id) => api.get(`/products/${id}`),
   /** Personalized + rule-based; pass `viewedIds` from local browse history for guests. */
   getRecommendations: (id, { limit = 8, viewedIds = [] } = {}) => {
     const params = { limit }

@@ -10,16 +10,11 @@ function httpCache(req, res, next) {
 
   const path = req.originalUrl.split("?")[0];
 
+  // Catalog must stay fresh when admin updates price/stock
   if (path === "/api/products") {
-    res.setHeader(
-      "Cache-Control",
-      "public, max-age=120, stale-while-revalidate=60"
-    );
+    res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
   } else if (/^\/api\/products\/[a-f\d]{24}$/i.test(path)) {
-    res.setHeader(
-      "Cache-Control",
-      "public, max-age=120, stale-while-revalidate=60"
-    );
+    res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
   } else if (/\/recommendations$/.test(path)) {
     res.setHeader("Cache-Control", "private, max-age=60");
   } else if (path.startsWith("/api/orders")) {

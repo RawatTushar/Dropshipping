@@ -148,7 +148,7 @@ const CheckoutScreen = () => {
     );
 
     if (createOrder.fulfilled.match(result)) {
-      await dispatch(fetchProducts({ force: true }));
+      await dispatch(fetchProducts());
       dispatch(clearCart({ userId }));
       navigate('/orders');
       return;

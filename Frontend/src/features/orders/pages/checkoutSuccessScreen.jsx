@@ -26,7 +26,7 @@ const CheckoutSuccessScreen = () => {
     (async () => {
       try {
         await paymentsAPI.completeStripeCheckout(sessionId);
-        await dispatch(fetchProducts({ force: true }));
+        await dispatch(fetchProducts());
         await dispatch(fetchMyOrders({ force: true }));
         dispatch(clearCart({ userId }));
         navigate('/orders', { replace: true });

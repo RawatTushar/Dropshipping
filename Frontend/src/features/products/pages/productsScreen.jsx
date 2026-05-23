@@ -34,6 +34,14 @@ const ProductsScreen = () => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') dispatch(fetchProducts());
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  }, [dispatch]);
+
   const deferredQuery = useDeferredValue(query);
   const normalizedSearch = deferredQuery.trim().toLowerCase();
 

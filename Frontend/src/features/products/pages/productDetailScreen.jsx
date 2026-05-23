@@ -18,7 +18,16 @@ const ProductDetailScreen = () => {
   const currency = useSelector(selectCurrentCurrency);
 
   useEffect(() => {
-    if (id) dispatch(fetchProductById({ id }));
+    if (id) dispatch(fetchProductById(id));
+  }, [dispatch, id]);
+
+  useEffect(() => {
+    if (!id) return undefined;
+    const refresh = () => {
+      if (document.visibilityState === 'visible') dispatch(fetchProductById(id));
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
   }, [dispatch, id]);
 
   useEffect(() => {
