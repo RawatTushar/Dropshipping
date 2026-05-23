@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   const apiTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:4000'
 
   return {
+    base: '/admin/',
     plugins: [react()],
     server: {
       port: 3001,
