@@ -27,6 +27,19 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 
+app.get(["/api", "/api/"], (req, res) => {
+  res.json({
+    ok: true,
+    message: "Dropshipping API",
+    endpoints: {
+      health: "GET /api/health",
+      auth: "POST /api/auth/login",
+      products: "GET /api/products",
+      orders: "GET /api/orders (auth required)",
+    },
+  });
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
