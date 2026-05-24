@@ -34,7 +34,7 @@ const CheckoutScreen = () => {
   const currency = useSelector(selectCurrentCurrency);
   const creatingOrder = useSelector(selectOrderCreating);
   const createOrderError = useSelector(selectOrderCreateError);
-
+  console.log('Submitting order with payload:', sessionReady ,isAuthenticated);
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -147,6 +147,7 @@ const CheckoutScreen = () => {
       setError('Please sign in to place an order.');
       return;
     }
+    
     if (!items.length) {
       setError('Your cart is empty.');
       return;
