@@ -183,7 +183,7 @@ const LoginScreen = () => {
         <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.85rem' }} disabled={loading}>
           {loading ? 'Authenticating...' : (
             <>
-              Sign In <LogIn size={18} style={{ marginLeft: '4px' }} />
+              Login IN <LogIn size={18} style={{ marginLeft: '4px' }} />
             </>
           )}
         </button>
