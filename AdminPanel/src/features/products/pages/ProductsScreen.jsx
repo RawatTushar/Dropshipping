@@ -1,4 +1,4 @@
-`import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteProduct, getProducts } from '../../../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
@@ -127,7 +127,7 @@ const ProductsScreen = () => {
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Name, category, brand, or ID…"
+                  placeholder="Name, category, brand, or ID..."
                   autoComplete="off"
                   style={{
                     width: '100%',
@@ -172,7 +172,7 @@ const ProductsScreen = () => {
             {filteredProducts.length === 0 ? (
               <div className="empty-state">
                 <Search size={48} style={{ margin: '0 auto 1.5rem', color: 'var(--border-color)' }} />
-                No products match &ldquo;{query.trim()}&rdquo;.
+               No products match "{query.trim()}".
               </div>
             ) : (
               <div className="table-container">
@@ -218,7 +218,7 @@ const ProductsScreen = () => {
                               fontFamily: 'ui-monospace, SFMono-Regular, monospace',
                             }}
                           >
-                            {marginPct == null ? '—' : `${marginPct}%`}
+                           {marginPct == null ? '-' : `${marginPct}%`}
                           </td>
                           <td>
                             <span
