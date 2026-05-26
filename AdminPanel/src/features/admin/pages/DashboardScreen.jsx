@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAdminInsights } from '../../../api/adminApi';
+import { getAdminInsights } from '../../../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import './DashboardScreen.css';
 import { motion } from 'framer-motion';

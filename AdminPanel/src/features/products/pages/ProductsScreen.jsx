@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+`import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteProduct, getProducts } from '../../../api/adminApi';
+import { deleteProduct, getProducts } from '../../../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';

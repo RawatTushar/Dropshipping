@@ -4,7 +4,7 @@ import {
   createProduct,
   getProductById,
   updateProduct,
-} from '../../../api/adminApi';
+} from '../../../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Image as ImageIcon } from 'lucide-react';

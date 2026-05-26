@@ -2,10 +2,10 @@ import React from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import AdminSessionHydrator from './components/AdminSessionHydrator';
 import Layout from './components/Layout';
-import DashboardScreen from './screens/DashboardScreen';
-import ProductsScreen from './screens/ProductsScreen';
-import ProductEditScreen from './screens/ProductEditScreen';
-import LoginScreen from './screens/LoginScreen';
+import DashboardScreen from './features/admin/pages/DashboardScreen';
+import ProductsScreen from './features/products/pages/ProductsScreen';
+import ProductEditScreen from './features/products/pages/ProductEditScreen';
+import LoginScreen from './features/auth/pages/LoginScreen';
 
 function App() {
   return (

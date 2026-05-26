@@ -6,7 +6,6 @@ import { authAPI } from '../../../api/api';
 import { setCredentials } from '../authSlice';
 import { persistUserSession } from '../../../utils/authSession';
 import '../../../login.css';
-// import '../screens/login.css';
 import HideAndShow from '../../../components/hideAndShow';
 import SaveButton from '../../../components/saveButton';
 import CustomInput from '../../../components/customInput';
