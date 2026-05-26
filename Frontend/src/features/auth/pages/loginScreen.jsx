@@ -137,7 +137,7 @@ const Login = () => {
         </form>
      <div className="otp-login-option">
           <p><b>or</b></p>  
-          <Link to="/login-otp" className="otp-link">Sign in with OTP</Link>
+          <Link to="/login-otp" className="otp-link">Login in with OTP</Link>
         </div>
 
         <div className="otp-login-option" style={{ marginTop: '0.75rem' }}>
