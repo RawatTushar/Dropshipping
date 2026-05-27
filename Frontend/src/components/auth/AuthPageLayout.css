@@ -1,0 +1,109 @@
+.auth-shell {
+  --auth-bg-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80');
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0c0c0f;
+}
+
+.auth-shell__bg {
+  position: absolute;
+  inset: -24px;
+  background-image: var(--auth-bg-image);
+  background-size: cover;
+  background-position: center;
+  filter: blur(18px) saturate(1.05);
+  transform: scale(1.06);
+  z-index: 0;
+}
+
+.auth-shell__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    165deg,
+    rgba(9, 9, 12, 0.88) 0%,
+    rgba(15, 15, 20, 0.82) 45%,
+    rgba(9, 9, 12, 0.9) 100%
+  );
+}
+
+.auth-shell__body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem 2.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 2rem 2rem 1.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(24, 24, 28, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+  animation: auth-card-in 0.35s ease-out;
+}
+
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-card__head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-card__head h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-h, #fafafa);
+}
+
+.auth-card__head p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted, #a1a1aa);
+  line-height: 1.45;
+}
+
+.auth-card .login-form {
+  gap: 1.1rem;
+}
+
+.auth-card .login-footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-card .otp-login-option {
+  margin-top: 0.25rem;
+}
+
+.auth-card .login-btn {
+  margin-top: 0.25rem;
+}
+
+.auth-card .login-btn:hover:not(:disabled) {
+  transform: none;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}

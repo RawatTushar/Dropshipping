@@ -5,7 +5,9 @@ import { useDispatch } from 'react-redux';
 import { authAPI } from '../../../api/api';
 import { setCredentials } from '../authSlice';
 import { persistUserSession } from '../../../utils/authSession';
+import AuthPageLayout from '../../../components/auth/AuthPageLayout';
 import '../../../login.css';
+import { Link } from 'react-router-dom';
 import HideAndShow from '../../../components/hideAndShow';
 import SaveButton from '../../../components/saveButton';
 import CustomInput from '../../../components/customInput';
@@ -82,52 +84,50 @@ const Register = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1>Create Account</h1>
-          <p>Please fill in your details to register</p>
-        </div>
+    <AuthPageLayout title="Create account" subtitle="Join to save orders and checkout faster">
+      <form className="login-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+        {error ? <div className="error-message">{error}</div> : null}
 
-        <form className="login-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }} >
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+        <CustomInput
+          type="text"
+          label="Full name"
+          name="name"
+          id="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Your name"
+          required
+        />
 
-          <CustomInput
-            type="text"
-            label="Full Name"
-            name="name"
-            id="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter your full name"
-            required
-          />
+        <CustomInput
+          type="email"
+          label="Email address"
+          name="email"
+          id="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="you@gmail.com"
+          required
+        />
 
-          <CustomInput
-            type="email"
-            label="Email Address"
-            name="email"
-            id="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-            required
-          />
+        <PasswordFields formData={formData} handleChange={handleChange} />
 
-          <PasswordFields formData={formData} handleChange={handleChange} />
+        <SaveButton
+          onClick={handleSave}
+          disabled={loading}
+          loading={loading}
+          text="Create account"
+          type="submit"
+          className="login-btn"
+        />
+      </form>
 
-          <SaveButton onClick={handleSave} disabled={loading} loading={loading} text="Register" type="submit" className="login-btn"/>
-        </form>
-
-        <div className="login-footer">
-          <p>Already have an account? <a href="/login">Sign in here</a></p>
-        </div>
+      <div className="login-footer">
+        <p>
+          Already have an account? <Link to="/login">Sign in</Link>
+        </p>
       </div>
-    </div>
+    </AuthPageLayout>
   );
 };
 

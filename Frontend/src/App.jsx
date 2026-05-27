@@ -1,5 +1,6 @@
 import React, { useLayoutEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import LandingPage from './features/landing/pages/landingPage';
 import LoginScreen from './features/auth/pages/loginScreen';
 import LoginOtp from './features/auth/pages/loginOtp';
 import HomePage from './features/home/pages/homePage';
@@ -43,7 +44,7 @@ const App = () => {
         <Route path="/settings" element={<SettingScreen />} />
         <Route path="/EnterOTP" element={<EnterOtp />} />
         <Route path="/changePassword" element={<ChangePassword />} />
-        <Route path="/" element={<LoginScreen />} />
+        <Route path="/" element={<LandingPage />} />
       </Routes>
     </div>
   );

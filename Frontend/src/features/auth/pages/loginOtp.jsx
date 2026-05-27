@@ -7,6 +7,7 @@ import { setAccessToken } from '../../../utils/authMemory';
 import { persistUserSession } from '../../../utils/authSession';
 import { verifyAuthSession } from '../../../utils/verifyAuthSession';
 import { logout, setCredentials } from '../authSlice';
+import AuthPageLayout from '../../../components/auth/AuthPageLayout';
 import '../../../login.css';
 import SaveButton from '../../../components/saveButton';
 import CustomInput from '../../../components/customInput';
@@ -85,14 +86,8 @@ const LoginOTP = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1>Login with OTP</h1>
-          <p>Sign in using a one-time password</p>
-        </div>
-
-        {step === 'email' ? (
+    <AuthPageLayout title="Sign in with OTP" subtitle="We will send a one-time code to your email">
+      {step === 'email' ? (
           <form onSubmit={handleRequestOTP} className="login-form">
             {error && (
               <div className="error-message">
@@ -172,8 +167,7 @@ const LoginOTP = () => {
             <Link to="/login">Sign in with password</Link>
           </div>
         </div>
-      </div>
-    </div>
+    </AuthPageLayout>
   );
 };
 

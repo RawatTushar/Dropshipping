@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard,
@@ -13,7 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { selectCartCount } from '../features/cart/cartSlice';
-import { logout, selectCurrentUserId } from '../features/auth/authSlice';
+import { logout, selectCurrentUserId, selectIsAuthenticated } from '../features/auth/authSlice';
 import { authAPI } from '../api/api';
 import { clearUserSession } from '../utils/authSession';
 import { fetchProducts } from '../features/products/productsSlice';
@@ -55,6 +55,7 @@ const DashboardLayout = ({
   const location = useLocation();
   const cartCount = useSelector(selectCartCount);
   const userId = useSelector(selectCurrentUserId);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const currency = useSelector(selectCurrentCurrency);
   const products = useSelector((state) => state.products.items);
   const productsLoading = useSelector((state) => state.products.loading);
@@ -339,11 +340,18 @@ const DashboardLayout = ({
         aria-hidden={showSplash}
       >
         {isDesktop ? (
-          <div
-            className="store-edge-trigger"
+          <button
+            type="button"
+            className={`store-desktop-drawer-indicator ${navOpen ? 'is-hidden' : ''}`}
+            onClick={() => {
+              clearDesktopCloseTimer();
+              setNavOpen(true);
+            }}
             onMouseEnter={openFromEdge}
-            aria-hidden
-          />
+            aria-label="Open sidebar menu"
+          >
+            <Menu size={16} strokeWidth={2.5} />
+          </button>
         ) : null}
 
         <div
@@ -380,6 +388,16 @@ const DashboardLayout = ({
               </div>
             </div>
             <div className="store-header__actions">
+              {!isAuthenticated ? (
+                <div className="store-header-auth">
+                  <Link to="/login" className="store-header-auth__link">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="store-header-auth__btn">
+                    Sign Up
+                  </Link>
+                </div>
+              ) : null}
               {cartCount > 0 ? (
                 <button
                   type="button"

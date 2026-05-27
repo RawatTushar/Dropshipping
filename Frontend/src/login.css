@@ -1,4 +1,4 @@
-/* Login Page Styles */
+/* Login / register form styles (layout: AuthPageLayout) */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -17,6 +17,41 @@
   width: 100%;
   max-width: 420px;
   animation: slideUp 0.3s ease-out;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.65rem;
+  color: var(--text-muted, #71717a);
+  font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.login-btn--outline {
+  width: 100%;
+  background: transparent;
+  color: var(--text-h, #fafafa);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+}
+
+.login-btn--outline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  transform: none;
+}
+
+.auth-msg--muted {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #a1a1aa);
 }
 
 @keyframes slideUp {
