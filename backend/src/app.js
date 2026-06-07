@@ -43,7 +43,9 @@ app.get(["/api", "/api/"], (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
-
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 app.get("/", (req, res) => {
   res.send("API running");
 });

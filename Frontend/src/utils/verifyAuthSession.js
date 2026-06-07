@@ -14,7 +14,7 @@ export async function verifyAuthSession() {
       return {
         ok: false,
         message:
-          'Login succeeded but the secure session cookie was not saved. Open the store at your site URL (e.g. http://16.171.135.147/), not :4000. On HTTP, set COOKIE_SECURE=false in backend/.env.',
+          'Login succeeded but the secure session cookie was not saved. Open the store at your site URL (e.g. http://16.171.37.166/), not :4000. On HTTP, set COOKIE_SECURE=false in backend/.env.',
       };
     }
     return {
