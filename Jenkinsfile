@@ -5,6 +5,10 @@ pipeline {
         IMAGE_TAG = "latest"
     }
 
+    options {
+        retry(2)   // 🔥 retry if docker pull fails
+    }
+
     stages {
 
         stage('Checkout') {
@@ -13,10 +17,19 @@ pipeline {
             }
         }
 
+        stage('Pre-pull base images') {
+            steps {
+                sh '''
+                docker pull node:22-alpine || true
+                docker pull nginx:alpine || true
+                '''
+            }
+        }
+
         stage('Build Images') {
             steps {
                 sh '''
-                docker compose build
+                docker compose build --no-cache
                 '''
             }
         }
@@ -24,7 +37,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                docker compose down
+                docker compose down || true
                 docker compose up -d
                 '''
             }
@@ -33,19 +46,25 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                sleep 15
-                curl -f http://localhost:4000/health
+                echo "Waiting for service..."
+                sleep 30
+
+                curl --retry 5 --retry-delay 5 -f http://localhost:4000/health
                 '''
             }
         }
     }
 
     post {
+        success {
+            echo "Deployment SUCCESS 🚀"
+        }
+
         failure {
+            echo "Deployment FAILED ❌"
+
             sh '''
-            echo "Deployment failed - rolling back"
-            docker compose down
-            docker compose up -d
+            docker compose logs --tail=50
             '''
         }
     }
