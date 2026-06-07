@@ -45,7 +45,7 @@ services:
     expose:
       - "4000"
     env_file:
-      - ./backend/.env
+      - /opt/env/backend.env
     environment:
       COOKIE_SECURE: "false"
       FRONTEND_URL: ${FRONTEND_URL:-http://16.171.37.166}
