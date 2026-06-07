@@ -103,7 +103,7 @@ const Login = () => {
           onClick={handleSubmit}
           disabled={loading}
           loading={loading}
-          text="Signing you in cmon"
+          text="Signing you in cmonnn..."
           type="submit"
           className="login-btn"
         />
