@@ -139,7 +139,7 @@ const Login = () => {
 
       <div className="login-footer">
         <p>
-          Create an Account? <Link to="/register">Create one</Link>
+          Create an Account to Sign up In OUR STORE? <Link to="/register">Create one</Link>
         </p>
       </div>
     </AuthPageLayout>
