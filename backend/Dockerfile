@@ -12,6 +12,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+RUN apk add --no-cache curl
+
 COPY package.json package-lock.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
