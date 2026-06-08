@@ -25,16 +25,16 @@ pipeline {
                 '''
             }
         }
-
-    stage('Build & Deploy') {
+        
+stage('Build & Deploy') {
     steps {
         sh '''
-        docker compose down --remove-orphans
-        docker compose up -d --build
+        docker compose down --remove-orphans || true
+        docker system prune -af || true
+        docker compose up -d --build --remove-orphans
         '''
     }
 }
-
       
 
         stage('Health Check') {
