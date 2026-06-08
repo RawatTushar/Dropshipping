@@ -48,9 +48,9 @@ services:
       - /opt/env/backend.env
     environment:
       COOKIE_SECURE: "false"
-      FRONTEND_URL: ${FRONTEND_URL:-http://16.171.37.166}
-      CLIENT_URL: ${CLIENT_URL:-http://16.171.37.166/admin}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://16.171.37.166}
+      FRONTEND_URL: ${FRONTEND_URL:-http://16.16.115.136}
+      CLIENT_URL: ${CLIENT_URL:-http://16.16.115.136/admin}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://16.16.115.136}
     depends_on:
       mongo:
         condition: service_healthy
