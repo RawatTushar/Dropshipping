@@ -56,11 +56,12 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
       interval: 20s
       timeout: 5s
       retries: 5
       start_period: 20s
+
 
   frontend:
     build:
