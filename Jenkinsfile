@@ -6,7 +6,7 @@ pipeline {
     }
 
     options {
-        retry(2)   // 🔥 retry if docker pull fails
+        retry(2)  
     }
 
     stages {
@@ -57,11 +57,11 @@ pipeline {
 
     post {
         success {
-            echo "Deployment SUCCESS 🚀"
+            echo "Deployment SUCCESS"
         }
 
         failure {
-            echo "Deployment FAILED ❌"
+            echo "Deployment FAILED "
 
             sh '''
             docker compose logs --tail=50
