@@ -103,7 +103,7 @@ const Login = () => {
           onClick={handleSubmit}
           disabled={loading}
           loading={loading}
-          text="Signing you in cmonnn..."
+          text="SIGN IN"
           type="submit"
           className="login-btn"
         />
@@ -139,7 +139,7 @@ const Login = () => {
 
       <div className="login-footer">
         <p>
-          Create an ACCOUNT to sign up In OUR STORE!! <Link to="/register">Create one</Link>
+          Doesn't Have An Account? <Link to="/register">Create one</Link>
         </p>
       </div>
     </AuthPageLayout>
