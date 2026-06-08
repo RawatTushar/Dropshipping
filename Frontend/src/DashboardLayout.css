@@ -179,7 +179,9 @@
 
 /* Staggered sidebar children entry animations when open */
 .store-sidebar .store-sidebar__brand,
-.store-sidebar .store-sidebar__scroll > *,
+.store-sidebar .store-sidebar__scroll > .store-sidebar__section-label,
+.store-sidebar .store-sidebar__scroll > .store-insight-toggles,
+.store-sidebar .store-sidebar__scroll > .store-insight-card,
 .store-sidebar .store-nav > *,
 .store-sidebar .store-sidebar__footer {
   opacity: 0;
@@ -193,22 +195,22 @@
   transform: translate3d(0, 0, 0);
   transition-delay: 0.08s;
 }
-.store-sidebar.is-open .store-sidebar__scroll > :nth-child(1) { /* pulse card title/label */
+.store-sidebar.is-open .store-sidebar__scroll > .store-sidebar__section-label:first-of-type {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   transition-delay: 0.12s;
 }
-.store-sidebar.is-open .store-sidebar__scroll > :nth-child(2) { /* insight toggles */
+.store-sidebar.is-open .store-sidebar__scroll > .store-insight-toggles {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   transition-delay: 0.15s;
 }
-.store-sidebar.is-open .store-sidebar__scroll > :nth-child(3) { /* insight card */
+.store-sidebar.is-open .store-sidebar__scroll > .store-insight-card {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   transition-delay: 0.18s;
 }
-.store-sidebar.is-open .store-sidebar__scroll > :nth-child(4) { /* section label Navigate */
+.store-sidebar.is-open .store-sidebar__scroll > .store-sidebar__section-label:nth-of-type(2) {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   transition-delay: 0.22s;
