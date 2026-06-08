@@ -26,22 +26,15 @@ pipeline {
             }
         }
 
-        stage('Build Images') {
-            steps {
-                sh '''
-                docker compose up -d --build
-                '''
-            }
-        }
+    stage('Build & Deploy') {
+    steps {
+        sh '''
+        docker compose up -d --build --remove-orphans
+        '''
+    }
+}
 
-        stage('Deploy') {
-            steps {
-                sh '''
-                docker compose down || true
-                docker compose up -d
-                '''
-            }
-        }
+      
 
         stage('Health Check') {
             steps {
