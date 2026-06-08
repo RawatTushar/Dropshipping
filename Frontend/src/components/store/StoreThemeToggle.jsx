@@ -4,6 +4,7 @@ import { Sun, Moon } from 'lucide-react';
 /** AdminPanel-style light/dark control (icon buttons in a bordered panel). */
 const StoreThemeToggle = ({ theme, onChange }) => (
   <div className="store-theme-panel" role="group" aria-label="Color theme">
+    <div className={`store-theme-panel__indicator is-${theme}`} />
     <button
       type="button"
       className={`store-theme-panel__btn${theme === 'light' ? ' is-active' : ''}`}

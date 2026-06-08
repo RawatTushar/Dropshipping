@@ -34,25 +34,27 @@ const StorePulseCard = ({
       </button>
     </div>
     <div className="store-insight-card">
-      {activeInsight === 'profit' ? (
-        <>
-          <p className="store-insight-card__label">Lifetime revenue</p>
-          <p className="store-insight-card__value">
-            {formatCurrencyFromUSD(totalRevenue, currency)}
-          </p>
-          <p className="store-insight-card__meta">
-            {ordersLoading ? 'Syncing orders…' : `${todayOrders} order(s) today`}
-          </p>
-        </>
-      ) : (
-        <>
-          <p className="store-insight-card__label">Units in catalog</p>
-          <p className="store-insight-card__value">{totalStockUnits}</p>
-          <p className="store-insight-card__meta">
-            {productsLoading ? 'Syncing stock…' : `${lowStockCount} low-stock SKU(s)`}
-          </p>
-        </>
-      )}
+      <div className="store-insight-card__content" key={activeInsight}>
+        {activeInsight === 'profit' ? (
+          <>
+            <p className="store-insight-card__label">Lifetime revenue</p>
+            <p className="store-insight-card__value">
+              {formatCurrencyFromUSD(totalRevenue, currency)}
+            </p>
+            <p className="store-insight-card__meta">
+              {ordersLoading ? 'Syncing orders…' : `${todayOrders} order(s) today`}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="store-insight-card__label">Units in catalog</p>
+            <p className="store-insight-card__value">{totalStockUnits}</p>
+            <p className="store-insight-card__meta">
+              {productsLoading ? 'Syncing stock…' : `${lowStockCount} low-stock SKU(s)`}
+            </p>
+          </>
+        )}
+      </div>
     </div>
   </>
 );

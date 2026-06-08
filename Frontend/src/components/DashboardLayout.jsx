@@ -336,7 +336,7 @@ const DashboardLayout = ({
       <StoreSplashScreen visible={showSplash} onComplete={handleSplashComplete} />
 
       <div
-        className={`store-shell${showSplash ? ' store-shell--behind-splash' : ''}`}
+        className={`store-shell${showSplash ? ' store-shell--behind-splash' : ''}${navOpen ? ' store-shell--sidebar-open' : ''}`}
         aria-hidden={showSplash}
       >
         {isDesktop ? (

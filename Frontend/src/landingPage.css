@@ -191,10 +191,27 @@
    Elegant Auth Modal & Glassmorphism styles
    ============================================================================= */
 
-/* Disable scrolling on landing body when modal is open */
+/* Disable scrolling on landing body when modal is open and add background scale-down / blur transitions */
+.landing__main,
+.landing__footer,
+.store-auth-header {
+  transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: filter, transform;
+}
+
 .landing.modal-open {
   height: 100vh;
   overflow: hidden;
+}
+
+.landing.modal-open .landing__main,
+.landing.modal-open .landing__footer,
+.landing.modal-open .store-auth-header {
+  filter: blur(8px) brightness(0.65);
+  transform: scale(0.982);
+  opacity: 0.65;
 }
 
 .auth-modal-overlay {
@@ -204,11 +221,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(8, 8, 12, 0.45);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: radial-gradient(circle at center, rgba(16, 24, 64, 0.55) 0%, rgba(6, 6, 12, 0.82) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   padding: 1.25rem;
-  animation: authOverlayFadeIn 0.3s ease forwards;
+  animation: authOverlayFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .auth-modal-container {
@@ -224,7 +241,7 @@
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   overflow: hidden;
-  animation: authModalSlideUp 0.38s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: authModalSlideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Accent lighting at the top right of the modal */
@@ -275,7 +292,7 @@
   max-height: 85dvh;
   overflow-y: auto;
   scrollbar-width: none;
-  animation: authContentFadeIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: authContentFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes authOverlayFadeIn {
@@ -286,19 +303,19 @@
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 }
 
 @keyframes authModalSlideUp {
   from {
     opacity: 0;
-    transform: translateY(32px) scale(0.96) rotateX(2deg);
+    transform: translateY(24px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1) rotateX(0deg);
+    transform: translateY(0) scale(1);
   }
 }
 
