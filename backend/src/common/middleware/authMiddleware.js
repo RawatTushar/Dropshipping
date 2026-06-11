@@ -8,7 +8,9 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
+      req.user = await User.findByPk(decoded.id, {
+        attributes: { exclude: ["password"] },
+      });
       if (!req.user) {
         return res.status(401).json({ message: "Not authorized" });
       }
@@ -22,7 +24,9 @@ const protect = async (req, res, next) => {
     if (!token) return res.status(401).json({ message: "Not authorized, no token" });
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
+      req.user = await User.findByPk(decoded.id, {
+        attributes: { exclude: ["password"] },
+      });
       if (!req.user) {
         return res.status(401).json({ message: "Not authorized" });
       }
@@ -53,7 +57,9 @@ const optionalAuth = async (req, res, next) => {
   if (!token) return next();
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findByPk(decoded.id, {
+      attributes: { exclude: ["password"] },
+    });
     if (user) req.user = user;
   } catch {
     /* invalid or expired token — treat as guest */

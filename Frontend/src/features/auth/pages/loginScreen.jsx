@@ -66,7 +66,8 @@ const Login = () => {
         setError(session.message);
         return;
       }
-
+      
+      console.log('Login successful, session verified');
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

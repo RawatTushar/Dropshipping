@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { Op } = require("sequelize");
 const { OAuth2Client } = require("google-auth-library");
 const { User } = require("../../models");
 const {
@@ -22,7 +23,7 @@ const registerUser = async (req, res) => {
     }
 
     // Check if user already exists and is confirmed
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser && existingUser.isEmailConfirmed) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -71,7 +72,7 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       message: "Registration successful. Please check your email to confirm your account.",
       requiresConfirmation: true,
-      _id: user._id,
+      _id: user.id,
       name: user.name,
       email: user.email,
     });
@@ -86,8 +87,10 @@ const confirmEmail = async (req, res) => {
     const { token } = req.params;
 
     const user = await User.findOne({
-      emailConfirmationToken: token,
-      emailConfirmationExpires: { $gt: Date.now() }
+      where: {
+        emailConfirmationToken: token,
+        emailConfirmationExpires: { [Op.gt]: new Date() },
+      },
     });
 
     if (!user) {
@@ -127,7 +130,7 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -142,13 +145,13 @@ const loginUser = async (req, res) => {
     }
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      setAuthCookie(res, user._id);
+      setAuthCookie(res, user.id);
       res.json({
-        _id: user._id,
+        _id: user.id,
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
-        token: generateToken(user._id),
+        token: generateToken(user.id),
       });
     } else {
       res.status(401).json({ message: "Invalid email or password" });
@@ -161,7 +164,7 @@ const loginUser = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     res.json({
-      _id: req.user._id,
+      _id: req.user.id,
       name: req.user.name,
       email: req.user.email,
       isAdmin: req.user.isAdmin,
@@ -410,7 +413,7 @@ const googleOauthCallback = async (req, res) => {
 
     if (!email) return res.status(400).json({ message: "Google account email not available." });
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ where: { email } });
     if (!user) {
       user = await User.create({
         name,
@@ -438,7 +441,7 @@ const googleOauthCallback = async (req, res) => {
       if (changed) await user.save();
     }
 
-    setAuthCookie(res, user._id);
+    setAuthCookie(res, user.id);
 
     let redirectBase =
       process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:5173";
