@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
-const User = require("../users/user.model");
+const { User } = require("../../models");
 const {
   sendEmailConfirmation,
   generateConfirmationToken,
