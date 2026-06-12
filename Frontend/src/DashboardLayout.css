@@ -125,9 +125,9 @@
 .store-sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(8, 8, 12, 0.42);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -143,7 +143,9 @@
   width: 260px;
   flex-shrink: 0;
   box-sizing: border-box;
-  background-color: var(--bg-sidebar);
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -161,8 +163,9 @@
   
   /* Smoother premium drawer animations */
   transform: translate3d(calc(-100% - 12px), 0, 0);
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s ease;
   box-shadow: none;
   will-change: transform;
 }
@@ -295,8 +298,8 @@
 }
 
 .store-shell--sidebar-open .store-shell-main {
-  transform: scale(0.99) translate3d(8px, 0, 0);
-  filter: brightness(0.85);
+  transform: scale(0.995) translate3d(6px, 0, 0);
+  opacity: 0.75;
   pointer-events: none;
 }
 
@@ -326,7 +329,13 @@
     box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: 
+      width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     opacity: 0.85;
   }
 
@@ -364,9 +373,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(99, 102, 241, 0.14);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05));
   color: var(--accent);
   border: 1px solid var(--accent-border);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
 .store-sidebar__titles h2 {
@@ -519,12 +529,21 @@
   font-size: 0.92rem;
   border: 1px solid transparent;
   font-family: var(--sans);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition: 
+    background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .store-nav-link:hover {
   background: var(--accent-bg);
   color: var(--text-h);
+  transform: translateX(4px);
+}
+
+.store-nav-link:active {
+  transform: translateX(2px) scale(0.98);
 }
 
 .store-nav-link.active {
@@ -649,12 +668,20 @@
   cursor: pointer;
   font-family: var(--sans);
   text-align: left;
-  transition: background 0.2s, border-color 0.2s;
+  transition: 
+    background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .store-logout:hover {
   background: rgba(239, 68, 68, 0.08);
   border-color: rgba(239, 68, 68, 0.2);
+  transform: translateX(4px);
+}
+
+.store-logout:active {
+  transform: translateX(2px) scale(0.98);
 }
 
 /* —— Header —— */

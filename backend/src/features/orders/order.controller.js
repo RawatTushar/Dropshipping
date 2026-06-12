@@ -1,4 +1,4 @@
-const Order = require("./order.model");
+const { Order, OrderItem, User } = require("../../models");
 const {
   createOrderWithInventory,
   restoreInventoryFromCanceledOrder,
@@ -20,7 +20,7 @@ const addOrderItems = async (req, res) => {
     }
 
     const created = await createOrderWithInventory({
-      userId: req.user._id,
+      userId: req.user.id,
       orderItems,
       shippingAddress,
       paymentMethod,
@@ -41,10 +41,12 @@ const addOrderItems = async (req, res) => {
 
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate("user", "name email");
+    const order = await Order.findByPk(req.params.id, {
+      include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }, { model: OrderItem, as: "orderItems" }],
+    });
     if (!order) return res.status(404).json({ message: "Order not found" });
-    const ownerId = order.user?._id?.toString() ?? order.user?.toString();
-    if (ownerId !== req.user._id.toString() && !req.user.isAdmin) {
+    const ownerId = order.user?.id ?? order.userId;
+    if (ownerId !== req.user.id && !req.user.isAdmin) {
       return res.status(404).json({ message: "Order not found" });
     }
     res.json(order);
@@ -55,7 +57,7 @@ const getOrderById = async (req, res) => {
 
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id });
+    const orders = await Order.findAll({ where: { userId: req.user.id }, include: [{ model: OrderItem, as: 'orderItems' }] });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -70,11 +72,11 @@ const ORDER_CANCEL_WINDOW_MS = 24 * 60 * 60 * 1000;
  */
 const updateMyOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    if (order.user.toString() !== req.user._id.toString()) {
+    if (order.userId !== req.user.id) {
       return res.status(404).json({ message: "Order not found" });
     }
     if (order.isDelivered) {
@@ -96,24 +98,20 @@ const updateMyOrder = async (req, res) => {
       return res.status(400).json({ message: "shippingAddress is required." });
     }
 
-    if (!order.shippingAddress) {
-      order.shippingAddress = {};
-    }
-
     if (shippingAddress.address != null) {
-      order.shippingAddress.address = String(shippingAddress.address).trim();
+      order.shippingAddress = String(shippingAddress.address).trim();
     }
     if (shippingAddress.city != null) {
-      order.shippingAddress.city = String(shippingAddress.city).trim();
+      order.shippingCity = String(shippingAddress.city).trim();
     }
     if (shippingAddress.postalCode != null) {
-      order.shippingAddress.postalCode = String(shippingAddress.postalCode).trim();
+      order.shippingPostalCode = String(shippingAddress.postalCode).trim();
     }
     if (shippingAddress.country != null) {
-      order.shippingAddress.country = String(shippingAddress.country).trim();
+      order.shippingCountry = String(shippingAddress.country).trim();
     }
 
-    const addr = String(order.shippingAddress.address || "").trim();
+    const addr = String(order.shippingAddress || "").trim();
     if (addr.length < 8) {
       return res.status(400).json({
         message: "Please provide a complete delivery address (at least 8 characters).",
@@ -133,11 +131,11 @@ const updateMyOrder = async (req, res) => {
  */
 const cancelMyOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findByPk(req.params.id, { include: [{ model: OrderItem, as: 'orderItems' }] });
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    if (order.user.toString() !== req.user._id.toString()) {
+    if (order.userId !== req.user.id) {
       return res.status(404).json({ message: "Order not found" });
     }
     if (order.isDelivered) {
@@ -158,8 +156,8 @@ const cancelMyOrder = async (req, res) => {
 
     await restoreInventoryFromCanceledOrder(order);
 
-    await Order.findByIdAndDelete(order._id);
-    res.json({ message: "Order cancelled", _id: order._id });
+    await order.destroy();
+    res.json({ message: "Order cancelled", _id: order.id });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }

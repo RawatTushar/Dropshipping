@@ -21,6 +21,8 @@ const getReadableUserId = (state, preferredUserId) => {
   return preferredUserId;
 };
 
+const getProductId = (product) => product?._id || product?.id || product?.productId;
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState: {
@@ -32,14 +34,17 @@ const cartSlice = createSlice({
       if (!state.byUser[userId]) state.byUser[userId] = [];
       const userItems = state.byUser[userId];
       const incoming = action.payload;
-      const existing = userItems.find((item) => item._id === incoming._id);
+      const productId = getProductId(incoming);
+      if (!productId) return;
+      const existing = userItems.find((item) => getProductId(item) === productId);
 
       if (existing) {
         const maxStock = Number(existing.countInStock ?? incoming.countInStock ?? 99);
         existing.qty = Math.min(existing.qty + 1, Math.max(1, maxStock));
       } else {
         userItems.push({
-          _id: incoming._id,
+          _id: productId,
+          id: productId,
           name: incoming.name,
           price: Number(incoming.price || 0),
           image: incoming.image,
@@ -53,7 +58,7 @@ const cartSlice = createSlice({
       const { productId, qty, userId: payloadUserId } = action.payload;
       const userId = getUserId(state, payloadUserId);
       const userItems = state.byUser[userId] || [];
-      const item = userItems.find((i) => i._id === productId);
+      const item = userItems.find((i) => getProductId(i) === productId);
       if (!item) return;
 
       const stock = Math.max(1, Number(item.countInStock ?? 1));
@@ -64,7 +69,7 @@ const cartSlice = createSlice({
       const userId = getUserId(state, action.payload?.userId);
       const productId = action.payload?.productId ?? action.payload;
       state.byUser[userId] = (state.byUser[userId] || []).filter(
-        (item) => item._id !== productId
+        (item) => getProductId(item) !== productId
       );
     },
 
@@ -72,13 +77,13 @@ const cartSlice = createSlice({
       const userId = getUserId(state, action.payload?.userId);
       const productId = action.payload?.productId ?? action.payload;
       const userItems = state.byUser[userId] || [];
-      const item = userItems.find((i) => i._id === productId);
+      const item = userItems.find((i) => getProductId(i) === productId);
       if (!item) return;
 
       if (item.qty > 1) {
         item.qty -= 1;
       } else {
-        state.byUser[userId] = userItems.filter((i) => i._id !== productId);
+        state.byUser[userId] = userItems.filter((i) => getProductId(i) !== productId);
       }
     },
 

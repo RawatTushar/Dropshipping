@@ -1,12 +1,11 @@
-const mongoose = require("mongoose");
-const Order = require("./order.model");
-const Product = require("../products/product.model");
+const { Product, Order, OrderItem } = require("../../models");
+const { sequelize } = require("../../config/db");
 
 function normalizeOrderItemProductId(item) {
   const p = item?.product;
   if (p == null) return "";
   if (typeof p === "object") {
-    const id = p._id != null ? p._id : p.id;
+    const id = p.id || p._id;
     if (id != null) return String(id);
     return "";
   }
@@ -17,37 +16,23 @@ function normalizeOrderItemProductId(item) {
 const rollbackStock = async (changes) => {
   if (!changes.length) return;
   await Promise.all(
-    changes.map((change) =>
-      Product.findByIdAndUpdate(change.productId, {
-        $inc: { countInStock: change.qty },
-      })
-    )
+    changes.map(async (change) => {
+      const p = await Product.findByPk(change.productId);
+      if (!p) return;
+      p.countInStock = Number(p.countInStock || 0) + change.qty;
+      await p.save();
+    })
   );
 };
 
-/**
- * Creates an order, decrements stock, increments soldCount.
- * @param {object} params
- * @param {string} params.userId
- * @param {Array} params.orderItems
- * @param {object} params.shippingAddress
- * @param {string} params.paymentMethod
- * @param {number} params.itemsPrice
- * @param {number} params.shippingPrice
- * @param {number} params.taxPrice
- * @param {number} params.totalPrice
- * @param {boolean} [params.isPaid]
- * @param {Date} [params.paidAt]
- * @param {string} [params.stripeSessionId]
- */
 async function createOrderWithInventory({
   userId,
   orderItems,
   shippingAddress,
   paymentMethod,
   itemsPrice,
-  shippingPrice,
   taxPrice,
+  shippingPrice,
   totalPrice,
   isPaid = false,
   paidAt = null,
@@ -58,7 +43,7 @@ async function createOrderWithInventory({
   }
 
   if (stripeSessionId) {
-    const dup = await Order.findOne({ stripeSessionId });
+    const dup = await Order.findOne({ where: { stripeSessionId } });
     if (dup) return dup;
   }
 
@@ -77,60 +62,66 @@ async function createOrderWithInventory({
     });
   }
 
-  const reservedChanges = [];
-  for (const merged of mergedItems.values()) {
-    const updated = await Product.findOneAndUpdate(
-      {
-        _id: merged.productId,
-        countInStock: { $gte: merged.qty },
-      },
-      {
-        $inc: { countInStock: -merged.qty },
-      },
-      { new: true }
-    );
-
-    if (!updated) {
-      await rollbackStock(reservedChanges);
-      throw new Error(
-        `Insufficient stock for ${merged.name}. Please refresh products and try again.`
-      );
+  const t = await sequelize.transaction();
+  try {
+    // Reserve stock and increment soldCount in the same transaction
+    for (const merged of mergedItems.values()) {
+      const product = await Product.findByPk(merged.productId, {
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+      if (!product || Number(product.countInStock || 0) < merged.qty) {
+        throw new Error(
+          `Insufficient stock for ${merged.name}. Please refresh products and try again.`
+        );
+      }
+      product.countInStock = Number(product.countInStock) - merged.qty;
+      product.soldCount = Number(product.soldCount || 0) + merged.qty;
+      await product.save({ transaction: t });
     }
 
-    reservedChanges.push({ productId: merged.productId, qty: merged.qty });
+    // Map shippingAddress into order fields
+    const orderPayload = {
+      userId,
+      paymentMethod,
+      itemsPrice,
+      taxPrice,
+      shippingPrice,
+      totalPrice,
+      isPaid,
+      paidAt: paidAt || null,
+      stripeSessionId: stripeSessionId || null,
+      shippingAddress: shippingAddress?.address || null,
+      shippingCity: shippingAddress?.city || null,
+      shippingPostalCode: shippingAddress?.postalCode || null,
+      shippingCountry: shippingAddress?.country || null,
+    };
+
+    const created = await Order.create(orderPayload, { transaction: t });
+
+    // Create order items
+    await Promise.all(
+      orderItems.map((it) =>
+        OrderItem.create(
+          {
+            orderId: created.id,
+            productId: normalizeOrderItemProductId(it),
+            name: it.name,
+            qty: it.qty,
+            price: it.price,
+            image: it.image,
+          },
+          { transaction: t }
+        )
+      )
+    );
+
+    await t.commit();
+    return created;
+  } catch (err) {
+    await t.rollback();
+    throw err;
   }
-
-  const order = new Order({
-    user: userId,
-    orderItems,
-    shippingAddress,
-    paymentMethod,
-    itemsPrice,
-    taxPrice,
-    shippingPrice,
-    totalPrice,
-    isPaid,
-    paidAt: paidAt || undefined,
-    stripeSessionId: stripeSessionId || undefined,
-  });
-
-  let created;
-  try {
-    created = await order.save();
-  } catch (saveErr) {
-    await rollbackStock(reservedChanges);
-    throw saveErr;
-  }
-
-  await Promise.all(
-    [...mergedItems.values()].map((m) =>
-      Product.findByIdAndUpdate(m.productId, {
-        $inc: { soldCount: m.qty },
-      })
-    )
-  );
-
-  return created;
 }
 
 /**
@@ -143,19 +134,23 @@ async function restoreInventoryFromCanceledOrder(order) {
     const pid = normalizeOrderItemProductId(oi);
     const q = Number(oi.qty || 0);
     if (!pid || q < 1) continue;
-    if (!mongoose.Types.ObjectId.isValid(pid)) continue;
     merged.set(pid, (merged.get(pid) || 0) + q);
   }
 
-  await Promise.all(
-    [...merged.entries()].map(async ([productId, qty]) => {
-      const product = await Product.findById(productId);
-      if (!product) return;
+  const t = await sequelize.transaction();
+  try {
+    for (const [productId, qty] of merged.entries()) {
+      const product = await Product.findByPk(productId, { transaction: t, lock: t.LOCK.UPDATE });
+      if (!product) continue;
       product.countInStock = Number(product.countInStock || 0) + qty;
       product.soldCount = Math.max(0, Number(product.soldCount || 0) - qty);
-      await product.save();
-    })
-  );
+      await product.save({ transaction: t });
+    }
+    await t.commit();
+  } catch (err) {
+    await t.rollback();
+    throw err;
+  }
 }
 
 module.exports = {

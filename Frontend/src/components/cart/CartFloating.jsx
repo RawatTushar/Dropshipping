@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   clearCart,
-  removeOneFromCart,
+  removeFromCart,
   selectCartCountByUser,
   selectCartItemsByUser,
   selectCartSubtotalByUser,
@@ -49,7 +49,7 @@ const CartFloating = () => {
 
         <div className="cart-items">
           {items.map((item) => (
-            <div className="cart-item" key={item._id}>
+            <div className="cart-item" key={item._id || item.id}>
               <img src={item.image} alt={item.name} className="cart-thumb" />
               <div className="cart-info">
                 <p className="cart-name">{item.name}</p>
@@ -63,7 +63,7 @@ const CartFloating = () => {
                     onChange={(e) =>
                       dispatch(
                         updateCartQty({
-                          productId: item._id,
+                          productId: item._id || item.id,
                           qty: Number(e.target.value),
                           userId,
                         })
@@ -73,12 +73,12 @@ const CartFloating = () => {
                   <button
                     type="button"
                     className="cart-remove-btn liquid-btn"
-                    title="Remove one unit"
+                    title="Remove this item"
                     onClick={() =>
-                      dispatch(removeOneFromCart({ productId: item._id, userId }))
+                      dispatch(removeFromCart({ productId: item._id || item.id, userId }))
                     }
                   >
-                    −1
+                    Remove
                   </button>
                 </div>
               </div>

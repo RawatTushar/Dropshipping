@@ -530,12 +530,20 @@
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: 
+    background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
+    border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .catalog-filters-modal__reset:hover {
-  background: var(--accent-bg);
+  background: var(--bg-hover);
   border-color: var(--accent-border);
+  transform: translateY(-1px);
+}
+
+.catalog-filters-modal__reset:active {
+  transform: scale(0.97);
 }
 
 .catalog-filters-modal__apply {
@@ -549,18 +557,21 @@
   font-size: 0.9375rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.15s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+  transition: 
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
+    box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
+    filter 0.15s ease;
 }
 
 .catalog-filters-modal__apply:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  filter: brightness(1.06) saturate(1.02);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
   transform: translateY(-1px);
 }
 
 .catalog-filters-modal__apply:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1128,17 +1139,22 @@
   width: min(370px, 88vw);
   height: min(560px, 72vh);
   overflow: hidden;
-  background: var(--bg-panel);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px;
-  box-shadow: var(--shadow-md);
+  padding: 18px;
+  box-shadow: var(--shadow-md), 0 16px 36px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   opacity: 0;
-  transform: translateY(10px) scale(0.98);
+  transform: translateY(16px) scale(0.95);
   pointer-events: none;
-  transition: opacity 220ms ease, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: 
+    opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.25s ease;
 }
 
 .cart-popover.open {
@@ -1149,7 +1165,7 @@
 
 .cart-popover.closed {
   opacity: 0;
-  transform: translateY(10px) scale(0.98);
+  transform: translateY(16px) scale(0.95);
   pointer-events: none;
 }
 

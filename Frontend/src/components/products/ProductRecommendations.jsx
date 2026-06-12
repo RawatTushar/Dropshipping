@@ -82,15 +82,18 @@ const ProductRecommendations = ({ anchorProductId }) => {
         <p className="product-reco__sub">{subtitle}</p>
       </div>
       <div className="product-reco__rail">
-        {items.map((p) => (
-          <Link key={p._id} to={`/products/${p._id}`} className="product-reco__card">
-            <div className="product-reco__img-wrap">
-              <img src={p.image} alt="" className="product-reco__img" loading="lazy" />
-            </div>
-            <p className="product-reco__name">{p.name}</p>
-            <p className="product-reco__price">{formatCurrencyFromUSD(p.price, currency)}</p>
-          </Link>
-        ))}
+        {items.map((p) => {
+          const productId = p._id || p.id
+          return (
+            <Link key={productId} to={`/products/${productId}`} className="product-reco__card">
+              <div className="product-reco__img-wrap">
+                <img src={p.image} alt="" className="product-reco__img" loading="lazy" />
+              </div>
+              <p className="product-reco__name">{p.name}</p>
+              <p className="product-reco__price">{formatCurrencyFromUSD(p.price, currency)}</p>
+            </Link>
+          )
+        })}
       </div>
     </section>
   )

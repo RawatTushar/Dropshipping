@@ -18,7 +18,7 @@ const PRODUCTS_PAGE_SIZE = 30;
 
 const ProductsScreen = () => {
   const dispatch = useDispatch();
-  const { items, loading, error } = useSelector((state) => state.products);
+  const { items, categories: serverCategories, loading, error, pagination } = useSelector((state) => state.products);
   const [query, setQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
@@ -30,20 +30,42 @@ const ProductsScreen = () => {
   const blurTimeout = useRef(null);
   const inputRef = useRef(null);
 
+  const deferredQuery = useDeferredValue(query);
+  const normalizedSearch = deferredQuery.trim().toLowerCase();
+
   useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+    dispatch(
+      fetchProducts({
+        page: currentPage,
+        limit: PRODUCTS_PAGE_SIZE,
+        search: normalizedSearch,
+        category,
+        minRating,
+        quick,
+        sort,
+      }),
+    );
+  }, [dispatch, currentPage, normalizedSearch, category, minRating, quick, sort]);
 
   useEffect(() => {
     const refresh = () => {
-      if (document.visibilityState === 'visible') dispatch(fetchProducts());
+      if (document.visibilityState === 'visible') {
+        dispatch(
+          fetchProducts({
+            page: currentPage,
+            limit: PRODUCTS_PAGE_SIZE,
+            search: normalizedSearch,
+            category,
+            minRating,
+            quick,
+            sort,
+          }),
+        );
+      }
     };
     document.addEventListener('visibilitychange', refresh);
     return () => document.removeEventListener('visibilitychange', refresh);
-  }, [dispatch]);
-
-  const deferredQuery = useDeferredValue(query);
-  const normalizedSearch = deferredQuery.trim().toLowerCase();
+  }, [dispatch, currentPage, normalizedSearch, category, minRating, quick, sort]);
 
   const rankedMatches = useMemo(() => {
     if (!normalizedSearch) return [];
@@ -65,7 +87,10 @@ const ProductsScreen = () => {
     return rankedMatches.map((x) => x.product);
   }, [items, normalizedSearch, rankedMatches]);
 
-  const categories = useMemo(() => uniqueCategories(items), [items]);
+  const categories = useMemo(
+    () => (serverCategories?.length ? serverCategories : uniqueCategories(items)),
+    [items, serverCategories],
+  );
 
   const displayItems = useMemo(
     () =>
@@ -77,11 +102,9 @@ const ProductsScreen = () => {
       }),
     [filteredItems, category, minRating, quick, sort],
   );
-  const totalPages = Math.max(1, Math.ceil(displayItems.length / PRODUCTS_PAGE_SIZE));
-  const pagedItems = useMemo(() => {
-    const start = (currentPage - 1) * PRODUCTS_PAGE_SIZE;
-    return displayItems.slice(start, start + PRODUCTS_PAGE_SIZE);
-  }, [displayItems, currentPage]);
+  const totalPages = Math.max(1, Number(pagination?.totalPages || 1));
+  const totalItems = Number(pagination?.totalItems ?? displayItems.length);
+  const pagedItems = displayItems;
 
   const toggleQuick = (id) => {
     setQuick((q) => (q === id ? null : id));
@@ -325,7 +348,7 @@ const ProductsScreen = () => {
                   Clear all
                 </button>
                 <button type="button" className="catalog-filters-modal__apply" onClick={closeFiltersModal}>
-                  Show {displayItems.length} {displayItems.length === 1 ? 'product' : 'products'}
+                  Show {totalItems} {totalItems === 1 ? 'product' : 'products'}
                 </button>
               </footer>
             </div>
@@ -387,7 +410,7 @@ const ProductsScreen = () => {
             >
               {suggestions.map((s, idx) => (
                 <button
-                  key={s._id}
+                  key={s._id || s.id}
                   type="button"
                   role="option"
                   aria-selected={idx === activeSuggestion}
@@ -466,16 +489,9 @@ const ProductsScreen = () => {
                 </button>
 
                 <div className="catalog-results-stat" aria-live="polite">
-                  <span className="catalog-results-stat__value">{displayItems.length}</span>
+                  <span className="catalog-results-stat__value">{totalItems}</span>
                   <span className="catalog-results-stat__label">
-                    {displayItems.length === 1 ? 'product' : 'products'}
-                    {(normalizedSearch || category !== 'all' || minRating > 0 || quick) &&
-                    filteredItems.length !== displayItems.length ? (
-                      <span className="catalog-results-stat__of">
-                        {' '}
-                        of {filteredItems.length} matched
-                      </span>
-                    ) : null}
+                    {totalItems === 1 ? 'product' : 'products'}
                   </span>
                 </div>
               </div>
@@ -503,7 +519,7 @@ const ProductsScreen = () => {
         <div className="catalog-grid">
           {pagedItems.map((product, idx) => (
             <div
-              key={product._id}
+              key={product._id || product.id}
               className="catalog-grid-cell"
               style={{ animationDelay: `${Math.min(idx, 12) * 35}ms` }}
             >

@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
+    // MongoDB removed from runtime: backend now uses PostgreSQL/Sequelize
     
     // Sync models with database (creates tables if they don't exist)
     await sequelize.sync({ alter: false });

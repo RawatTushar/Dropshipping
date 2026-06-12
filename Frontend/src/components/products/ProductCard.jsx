@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   addToCart,
-  removeOneFromCart,
+  removeFromCart,
   selectCartItemsByUser,
 } from '../../features/cart/cartSlice';
 import { selectCurrentUserId } from '../../features/auth/authSlice';
@@ -36,7 +36,8 @@ const ProductCard = ({ product }) => {
   const currency = useSelector(selectCurrentCurrency);
   const cartItems = useSelector((state) => selectCartItemsByUser(state, userId));
 
-  const inCart = cartItems.find((item) => item._id === product._id);
+  const productId = product._id || product.id;
+  const inCart = cartItems.find((item) => (item._id || item.id) === productId);
   const pct = discountPercent(product);
   const listPrice = Number(product.compareAtPrice || 0);
   const salePrice = Number(product.price || 0);
@@ -45,7 +46,7 @@ const ProductCard = ({ product }) => {
   const reviews = Number(product.reviewCount || 0);
 
   return (
-    <article className="catalog-card" key={product._id}>
+    <article className="catalog-card" key={productId}>
       <div className="catalog-card-media">
         {showDiscount ? (
           <span className="catalog-badge catalog-badge--sale">-{pct}%</span>
@@ -55,12 +56,12 @@ const ProductCard = ({ product }) => {
           alt={product.name}
           className="catalog-image"
           loading="lazy"
-          onClick={() => navigate(`/products/${product._id}`)}
+          onClick={() => navigate(`/products/${productId}`)}
         />
       </div>
       <div className="catalog-body">
         <p className="catalog-category">{product.category || 'General'}</p>
-        <h3 onClick={() => navigate(`/products/${product._id}`)}>{product.name}</h3>
+        <h3 onClick={() => navigate(`/products/${productId}`)}>{product.name}</h3>
         <div className="catalog-rating-row">
           <StarRow rating={rating} />
           {rating > 0 ? (
@@ -92,7 +93,7 @@ const ProductCard = ({ product }) => {
             className="catalog-add-btn liquid-btn"
             onClick={() => {
               dispatch(addToCart({ ...product, userId }));
-              productsAPI.trackInteraction(product._id, 'cart_add');
+              productsAPI.trackInteraction(productId, 'cart_add');
             }}
             disabled={Number(product.countInStock ?? 0) <= 0}
           >
@@ -104,7 +105,7 @@ const ProductCard = ({ product }) => {
           </button>
           <button
             className="catalog-remove-btn liquid-btn"
-            onClick={() => dispatch(removeOneFromCart({ productId: product._id, userId }))}
+            onClick={() => dispatch(removeFromCart({ productId, userId }))}
             disabled={!inCart}
           >
             Remove
