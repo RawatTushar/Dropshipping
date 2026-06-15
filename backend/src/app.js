@@ -9,6 +9,8 @@ const productRoutes = require("./features/products/product.routes");
 const orderRoutes = require("./features/orders/order.routes");
 const paymentRoutes = require("./features/payments/payment.routes");
 const httpCache = require("./common/middleware/httpCache");
+const { notFoundHandler, errorHandler } = require("./common/middleware/errorHandler");
+const mountSwagger = require("./common/docs/swagger");
 
 const app = express();
 
@@ -19,6 +21,24 @@ app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
 app.use(httpCache);
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on("finish", () => {
+    console.log({
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      duration: `${Date.now() - start}ms`,
+    });
+  });
+
+  next();
+});
+
+// API docs (Swagger)
+mountSwagger(app);
 
 // routes
 app.use("/api/auth", authRoutes);
@@ -53,6 +73,10 @@ app.get("/", (req, res) => {
 app.get("/home", (req, res) => {
   res.send("Welcome to the Dropshipping API");
 });
+
+// 404 handler and centralized error handler
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 module.exports = app;
 

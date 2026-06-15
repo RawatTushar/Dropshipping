@@ -61,7 +61,7 @@ const DashboardLayout = ({
   const productsLoading = useSelector((state) => state.products.loading);
   const orders = useSelector(selectOrders);
   const ordersLoading = useSelector(selectOrdersLoading);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => getStoredThemeForUser(userId));
   const [navOpen, setNavOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     () =>

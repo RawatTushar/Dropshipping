@@ -2,7 +2,7 @@
 .modal-home-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.6);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: grid;
@@ -14,11 +14,11 @@
 
 .modal-home {
   width: min(560px, 100%);
-  background: var(--bg-panel);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-md);
   padding: 28px;
-  box-shadow: var(--shadow-md), 0 20px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-xl);
   position: relative;
   animation: modalSlideFade 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -27,12 +27,13 @@
   margin: 0 0 16px;
   font-size: 1.35rem;
   letter-spacing: -0.025em;
-  color: var(--text-h);
+  color: var(--foreground);
+  font-family: var(--display);
 }
 
 .modal-home-body p {
   margin: 0 0 12px;
-  color: var(--text);
+  color: var(--muted-foreground);
   line-height: 1.6;
 }
 
@@ -42,8 +43,8 @@
   right: 16px;
   border: 1px solid var(--border);
   border-radius: 50%;
-  background: var(--bg);
-  color: var(--text-h);
+  background: var(--muted);
+  color: var(--foreground);
   width: 32px;
   height: 32px;
   display: flex;
@@ -57,7 +58,7 @@
 }
 
 .modal-home-close:hover {
-  background: var(--accent-bg);
+  background: var(--color-primary-soft);
   color: var(--accent);
   transform: rotate(90deg);
 }

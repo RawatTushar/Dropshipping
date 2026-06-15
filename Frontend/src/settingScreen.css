@@ -9,8 +9,8 @@
   display: flex;
   overflow-x: auto;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-panel);
-  border-radius: 12px 12px 0 0;
+  background: var(--card);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   padding: 0 24px;
 }
 
@@ -19,7 +19,7 @@
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: var(--text);
+  color: var(--muted-foreground);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -29,36 +29,36 @@
 }
 
 .tab-btn:hover {
-  color: var(--text-h);
-  background: var(--accent-bg);
-  border-radius: 6px 6px 0 0;
+  color: var(--foreground);
+  background: var(--muted);
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
 }
 
 .tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
   font-weight: 700;
-  text-shadow: 0 0 1px rgba(99, 102, 241, 0.25);
 }
 
 .settings-content {
   padding: 40px;
   min-height: 480px;
-  background: var(--bg);
-  border-radius: 0 0 12px 12px;
+  background: var(--card);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .tab-pane h3 {
   font-size: 22px;
-  color: var(--text-h);
+  color: var(--foreground);
   margin: 0 0 8px 0;
   font-weight: 800;
   letter-spacing: -0.02em;
+  font-family: var(--display);
 }
 
 .subtitle {
   font-size: 15px;
-  color: var(--text);
+  color: var(--muted-foreground);
   margin-bottom: 40px;
   font-weight: 500;
 }
@@ -84,18 +84,18 @@
 
 label {
   font-size: 14px;
-  color: var(--text-h);
+  color: var(--foreground);
   margin-bottom: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .premium-input {
-  background: var(--bg);
+  background: var(--muted);
   border: 1px solid var(--border);
-  color: var(--text-h);
+  color: var(--foreground);
   padding: 14px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 15px;
   font-family: inherit;
   font-weight: 500;
@@ -106,13 +106,13 @@ label {
 .premium-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-bg);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
   transform: translateY(-1px);
 }
 
 .input-hint {
   font-size: 13px;
-  color: var(--text);
+  color: var(--muted-foreground);
   margin-top: 8px;
   font-weight: 500;
 }
@@ -129,13 +129,13 @@ label {
 
 .settings-hint {
   font-size: 14px;
-  color: var(--text);
+  color: var(--muted-foreground);
   line-height: 1.5;
   max-width: 560px;
 }
 
 .settings-hint strong {
-  color: var(--text-h);
+  color: var(--foreground);
   font-weight: 800;
 }
 
@@ -150,11 +150,11 @@ label {
 }
 
 .btn-save {
-  background: var(--text-h);
-  color: var(--bg);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  color: var(--accent-foreground);
   border: none;
   padding: 12px 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
@@ -165,8 +165,8 @@ label {
 
 .btn-save:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  opacity: 0.95;
+  box-shadow: var(--shadow-accent-lg);
+  filter: brightness(1.05);
 }
 
 .settings-card {
@@ -174,18 +174,18 @@ label {
   align-items: center;
   justify-content: space-between;
   padding: 24px;
-  background: var(--bg-panel);
+  background: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   margin-bottom: 24px;
   max-width: 680px;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .settings-card:hover {
-  border-color: var(--accent-border);
+  border-color: rgba(0, 82, 255, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06), var(--shadow-glow);
+  box-shadow: var(--shadow-md);
 }
 
 .settings-card-text {
@@ -194,7 +194,7 @@ label {
 }
 
 .settings-card-text strong {
-  color: var(--text-h);
+  color: var(--foreground);
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 6px;
@@ -202,16 +202,16 @@ label {
 
 .settings-card-text span {
   font-size: 14px;
-  color: var(--text);
+  color: var(--muted-foreground);
   font-weight: 500;
 }
 
 .btn-outline {
   background: transparent;
   border: 2px solid var(--border);
-  color: var(--text-h);
+  color: var(--foreground);
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -219,8 +219,9 @@ label {
 }
 
 .btn-outline:hover {
-  background: var(--accent-bg);
-  border-color: var(--text-h);
+  background: var(--color-primary-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Integrations */
@@ -237,15 +238,15 @@ label {
   align-items: center;
   padding: 20px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-panel);
+  border-radius: var(--radius-md);
+  background: var(--card);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .integration-item:hover {
-  border-color: var(--accent-border);
+  border-color: rgba(0, 82, 255, 0.3);
   transform: translateY(-2px) scale(1.006);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06), var(--shadow-glow);
+  box-shadow: var(--shadow-md);
 }
 
 .integration-info {
@@ -257,7 +258,7 @@ label {
 .icon-box {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -275,7 +276,7 @@ label {
 }
 
 .integration-info strong {
-  color: var(--text-h);
+  color: var(--foreground);
   font-size: 16px;
   margin-bottom: 4px;
   font-weight: 700;
@@ -283,7 +284,7 @@ label {
 
 .integration-info span {
   font-size: 13px;
-  color: var(--text);
+  color: var(--muted-foreground);
   font-weight: 600;
 }
 

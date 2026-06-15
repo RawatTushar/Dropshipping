@@ -29,9 +29,8 @@ pipeline {
 stage('Build & Deploy') {
     steps {
         sh '''
-        docker compose down --remove-orphans || true
-        docker system prune -af || true
-        docker compose up -d --build --remove-orphans
+docker compose pull || true
+docker compose up -d --build --remove-orphans
         '''
     }
 }

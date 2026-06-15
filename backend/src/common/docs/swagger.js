@@ -1,0 +1,30 @@
+const path = require("path");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+
+const pkg = require("../../../package.json");
+
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: `${pkg.name} API`,
+      version: pkg.version,
+      description: pkg.description || "",
+    },
+    servers: [
+      {
+        url: process.env.SWAGGER_BASE_URL || `http://localhost:${process.env.PORT || 5000}`,
+      },
+    ],
+  },
+  apis: [path.join(__dirname, "../../features/**/*.js")],
+};
+
+const swaggerSpec = swaggerJsdoc(options);
+
+function mountSwagger(app) {
+  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
+
+module.exports = mountSwagger;
