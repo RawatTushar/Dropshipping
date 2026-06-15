@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -148,25 +149,20 @@ const DashboardLayout = ({
     }
   }, [navOpen]);
 
+  // Only auto-close sidebar on scroll for mobile, not desktop
   useEffect(() => {
-    if (!navOpen) return undefined;
+    if (!navOpen || isDesktop) return undefined;
 
     const onWindowScroll = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - lastWindowScrollY.current) > 8) {
-        setNavOpen(false);
-        clearDesktopCloseTimer();
-      }
-      lastWindowScrollY.current = y;
+      setNavOpen(false);
+      clearDesktopCloseTimer();
     };
 
     const onWheel = (e) => {
       const bar = sidebarRef.current;
       if (bar && e.target instanceof Node && bar.contains(e.target)) return;
-      if (Math.abs(e.deltaY) > 6 || Math.abs(e.deltaX) > 6) {
-        setNavOpen(false);
-        clearDesktopCloseTimer();
-      }
+      setNavOpen(false);
+      clearDesktopCloseTimer();
     };
 
     let touchStartY = 0;
@@ -199,7 +195,7 @@ const DashboardLayout = ({
       document.removeEventListener('touchstart', onTouchStart);
       document.removeEventListener('touchmove', onTouchMove);
     };
-  }, [navOpen, clearDesktopCloseTimer]);
+  }, [navOpen, clearDesktopCloseTimer, isDesktop]);
 
   const totalRevenue = orders.reduce(
     (sum, order) => sum + Number(order.totalPrice || 0),
@@ -240,31 +236,16 @@ const DashboardLayout = ({
     navigate('/login');
   }, [dispatch, navigate]);
 
-  const openFromEdge = useCallback(() => {
-    if (!isDesktop) return;
-    clearDesktopCloseTimer();
-    setNavOpen(true);
-  }, [isDesktop, clearDesktopCloseTimer]);
-
+  // Keep sidebar open on desktop until explicitly closed
   const onSidebarPointerEnter = useCallback(() => {
     clearDesktopCloseTimer();
   }, [clearDesktopCloseTimer]);
-
-  const onSidebarPointerLeave = useCallback(() => {
-    if (!isDesktop) return;
-    clearDesktopCloseTimer();
-    desktopCloseTimerRef.current = window.setTimeout(() => {
-      setNavOpen(false);
-      desktopCloseTimerRef.current = null;
-    }, DESKTOP_CLOSE_DELAY_MS);
-  }, [isDesktop, clearDesktopCloseTimer]);
 
   const sidebar = (
     <aside
       ref={sidebarRef}
       className={`store-sidebar${navOpen ? ' is-open' : ''}`}
       onMouseEnter={onSidebarPointerEnter}
-      onMouseLeave={onSidebarPointerLeave}
     >
       <div className="store-sidebar__brand">
         <div className="store-sidebar__logo-mark" aria-hidden>
@@ -339,30 +320,35 @@ const DashboardLayout = ({
         className={`store-shell${showSplash ? ' store-shell--behind-splash' : ''}${navOpen ? ' store-shell--sidebar-open' : ''}`}
         aria-hidden={showSplash}
       >
-        {isDesktop ? (
-          <button
-            type="button"
-            className={`store-desktop-drawer-indicator ${navOpen ? 'is-hidden' : ''}`}
-            onClick={() => {
-              clearDesktopCloseTimer();
-              setNavOpen(true);
-            }}
-            onMouseEnter={openFromEdge}
-            aria-label="Open sidebar menu"
-          >
-            <Menu size={16} strokeWidth={2.5} />
-          </button>
-        ) : null}
+        {/* Render Desktop Drawer Indicator, Sidebar & Backdrop directly to body using Portal! */}
+        {createPortal(
+          <>
+            {isDesktop ? (
+              <button
+                type="button"
+                className={`store-desktop-drawer-indicator ${navOpen ? 'is-hidden' : ''}`}
+                onClick={() => {
+                  clearDesktopCloseTimer();
+                  setNavOpen(true);
+                }}
+                aria-label="Open sidebar menu"
+              >
+                <Menu size={16} strokeWidth={2.5} />
+              </button>
+            ) : null}
 
-        <div
-          className={`store-sidebar-backdrop${navOpen ? ' is-visible' : ''}`}
-          onClick={() => {
-            clearDesktopCloseTimer();
-            setNavOpen(false);
-          }}
-          aria-hidden={!navOpen}
-        />
-        {sidebar}
+            <div
+              className={`store-sidebar-backdrop${navOpen ? ' is-visible' : ''}`}
+              onClick={() => {
+                clearDesktopCloseTimer();
+                setNavOpen(false);
+              }}
+              aria-hidden={!navOpen}
+            />
+            {sidebar}
+          </>,
+          document.body
+        )}
 
         <div className="store-shell-main">
           <header className="store-header">
