@@ -62,7 +62,11 @@ const DashboardScreen = () => {
         navigate('/login');
         return;
       }
-      setError(err.response?.data?.message || err.message);
+      setError(
+        err.response?.status === 502
+          ? 'Server unavailable (502). Backend may be down — check docker logs on EC2.'
+          : err.response?.data?.message || err.message,
+      );
     } finally {
       setLoading(false);
     }
@@ -124,6 +128,7 @@ const DashboardScreen = () => {
               </div>
               <div className="dashboard-kpi-hint">
                 {s?.orderCount ?? 0} orders · {s?.totalUnitsSold ?? 0} units sold
+                {s?.totalOrderRevenue != null ? ` · ${money(s.totalOrderRevenue)} order total` : ''}
               </div>
             </motion.div>
             <motion.div variants={itemVariants} className="dashboard-kpi dashboard-kpi--positive">
@@ -159,6 +164,13 @@ const DashboardScreen = () => {
             <button
               type="button"
               className="dashboard-action-chip"
+              onClick={() => navigate('/sales')}
+            >
+              View all sales <ArrowRight size={16} />
+            </button>
+            <button
+              type="button"
+              className="dashboard-action-chip"
               onClick={() => navigate('/products')}
             >
               Manage catalog <ArrowRight size={16} />
@@ -184,13 +196,13 @@ const DashboardScreen = () => {
               </div>
             </div>
             <div className="dashboard-card">
-              {!insights.lowStock?.length ? (
+              {!(insights.lowStock || []).length ? (
                 <p className="dashboard-empty-hint">
                   No SKUs at or below {threshold} units. Inventory buffer healthy.
                 </p>
               ) : (
-                insights.lowStock.map((row) => (
-                  <div key={row._id} className="dashboard-stock-row">
+                (insights.lowStock || []).map((row) => (
+                  <div key={row.id} className="dashboard-stock-row">
                     <div className="dashboard-stock-meta">
                       <div className="dashboard-stock-name" title={row.name}>
                         {row.name}
@@ -210,7 +222,7 @@ const DashboardScreen = () => {
                       <button
                         type="button"
                         className="dashboard-link-btn"
-                        onClick={() => navigate(`/products/${row._id}/edit`)}
+                        onClick={() => navigate(`/products/${row.id}/edit`)}
                       >
                         Adjust
                       </button>
@@ -220,6 +232,60 @@ const DashboardScreen = () => {
               )}
             </div>
           </motion.section>
+
+          <div className="dashboard-two-col" style={{ marginTop: '2.5rem' }}>
+            <motion.section
+              className="dashboard-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+            >
+              <div className="dashboard-section-head">
+                <div>
+                  <h2 className="dashboard-section-title">Recent store sales</h2>
+                  <p className="dashboard-section-desc">
+                    Latest orders from your storefront.
+                  </p>
+                </div>
+                <button type="button" className="dashboard-link-btn" onClick={() => navigate('/sales')}>
+                  See all
+                </button>
+              </div>
+              <div className="dashboard-card">
+                {!(insights.recentOrders || []).length ? (
+                  <p className="dashboard-empty-hint">No sales recorded yet.</p>
+                ) : (
+                  <div className="dashboard-table-wrap">
+                    <table className="dashboard-table">
+                      <thead>
+                        <tr>
+                          <th>Customer</th>
+                          <th className="dashboard-mono">Items</th>
+                          <th className="dashboard-mono">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(insights.recentOrders || []).slice(0, 8).map((row) => (
+                          <tr key={row.id}>
+                            <td>
+                              <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                                {row.customerName}
+                              </div>
+                              <div className="dashboard-stock-sub">{row.customerEmail}</div>
+                            </td>
+                            <td className="dashboard-mono">
+                              {(row.items || []).reduce((n, i) => n + i.qty, 0)}
+                            </td>
+                            <td className="dashboard-mono">{money(row.totalPrice)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </motion.section>
+          </div>
 
           <div className="dashboard-two-col" style={{ marginTop: '2.5rem' }}>
             <motion.section 
@@ -237,7 +303,7 @@ const DashboardScreen = () => {
                 </div>
               </div>
               <div className="dashboard-card">
-                {!insights.bestSellers?.length ? (
+                {!(insights.bestSellers || []).length ? (
                   <p className="dashboard-empty-hint">
                     No sales recorded yet.
                   </p>
@@ -252,14 +318,14 @@ const DashboardScreen = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {insights.bestSellers.map((row) => (
-                          <tr key={row._id}>
+                        {(insights.bestSellers || []).map((row) => (
+                          <tr key={row.id}>
                             <td>
                               <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{row.name}</div>
                               <button
                                 type="button"
                                 className="dashboard-link-btn"
-                                onClick={() => navigate(`/products/${row._id}/edit`)}
+                                onClick={() => navigate(`/products/${row.id}/edit`)}
                               >
                                 View
                               </button>
@@ -302,8 +368,8 @@ const DashboardScreen = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {insights.profitability.slice(0, 10).map((row) => (
-                        <tr key={row._id}>
+                      {(insights.profitability || []).slice(0, 10).map((row) => (
+                        <tr key={row.id}>
                           <td>
                             <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{row.name}</div>
                             <div className="dashboard-stock-sub">

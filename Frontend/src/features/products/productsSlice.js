@@ -1,11 +1,12 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { productsAPI, getApiErrorMessage } from '../../api/api';
+import { invalidateHttpCache } from '../../shared/lib/httpCache';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const { data } = await productsAPI.getAll(params);
+      const { data } = await productsAPI.getAll({ ...params, force: false });
       return data;
     } catch (err) {
       return rejectWithValue(getApiErrorMessage(err, 'Failed to load products'));

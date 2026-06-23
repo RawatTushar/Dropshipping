@@ -64,6 +64,21 @@ const getMyOrders = async (req, res) => {
   }
 };
 
+const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      include: [
+        { model: User, as: "user", attributes: ["id", "name", "email"] },
+        { model: OrderItem, as: "orderItems" }
+      ],
+      order: [["createdAt", "DESC"]]
+    });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const ORDER_EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 const ORDER_CANCEL_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -167,6 +182,7 @@ module.exports = {
   addOrderItems,
   getOrderById,
   getMyOrders,
+  getAllOrders,
   updateMyOrder,
   cancelMyOrder,
 };

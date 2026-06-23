@@ -58,8 +58,8 @@ export const authAPI = {
 
 // Products API calls — always fetch fresh so admin price/stock edits show on the store
 export const productsAPI = {
-  getAll: ({ page, limit, search, category, minRating, quick, sort } = {}) =>
-    api.get('/products', {
+  getAll: ({ page, limit, search, category, minRating, quick, sort, force = false } = {}) =>
+    cachedGet(api, '/products', {
       params: {
         ...(page ? { page } : {}),
         ...(limit ? { limit } : {}),
@@ -69,6 +69,8 @@ export const productsAPI = {
         ...(quick ? { quick } : {}),
         ...(sort ? { sort } : {}),
       },
+      ttlMs: CACHE_TTL.products,
+      force,
     }),
   getById: (id) => api.get(`/products/${id}`),
   /** Personalized + rule-based; pass `viewedIds` from local browse history for guests. */

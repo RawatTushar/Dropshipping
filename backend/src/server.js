@@ -6,7 +6,7 @@ const models = require("./models"); // Load all models and associations
 
 setupDNS();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 
 const startServer = async () => {
   try {

@@ -1,4 +1,4 @@
-const { Product, Order, OrderItem } = require("../../models");
+const { Product, Order, OrderItem, User } = require("../../models");
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -6,7 +6,13 @@ const getAdminInsights = async (req, res) => {
   try {
     const [products, orders] = await Promise.all([
       Product.findAll({ raw: true }),
-      Order.findAll({ include: [{ model: OrderItem, as: 'orderItems' }] }),
+      Order.findAll({
+        include: [
+          { model: OrderItem, as: "orderItems" },
+          { model: User, as: "user", attributes: ["id", "name", "email"] },
+        ],
+        order: [["createdAt", "DESC"]],
+      }),
     ]);
 
     const soldByProduct = new Map();
@@ -39,7 +45,7 @@ const getAdminInsights = async (req, res) => {
       const inventoryCostBasis = hasCost && (p.countInStock || 0) > 0 ? (p.countInStock || 0) * cost : hasCost ? 0 : null;
 
       return {
-        _id: p.id,
+        id: p.id,
         name: p.name,
         category: p.category,
         price,
@@ -60,7 +66,7 @@ const getAdminInsights = async (req, res) => {
       .sort((a, b) => b.unitsSold - a.unitsSold)
       .slice(0, 8)
       .map((row) => ({
-        _id: row._id,
+        id: row.id,
         name: row.name,
         unitsSold: row.unitsSold,
         revenueContribution: row.unitsSold * row.price,
@@ -77,7 +83,7 @@ const getAdminInsights = async (req, res) => {
         if (stock === 0) level = "out";
         else if (stock <= 3) level = "critical";
         return {
-          _id: p.id,
+          id: p.id,
           name: p.name,
           countInStock: stock,
           price: p.price,
@@ -93,6 +99,30 @@ const getAdminInsights = async (req, res) => {
 
     const missingCostCount = profitability.filter((r) => !r.hasCost).length;
 
+    const totalOrderRevenue = orders.reduce(
+      (acc, o) => acc + Number(o.totalPrice || 0),
+      0
+    );
+
+    const recentOrders = orders.slice(0, 25).map((o) => ({
+        id: o.id,
+        customerName: o.user?.name || "Guest",
+        customerEmail: o.user?.email || "",
+        totalPrice: Number(o.totalPrice || 0),
+        itemsPrice: Number(o.itemsPrice || 0),
+        paymentMethod: o.paymentMethod || "—",
+        isPaid: Boolean(o.isPaid),
+        isDelivered: Boolean(o.isDelivered),
+        createdAt: o.createdAt,
+        items: (o.orderItems || []).map((item) => ({
+          productId: item.productId,
+          name: item.name,
+          qty: Number(item.qty || 0),
+          price: Number(item.price || 0),
+          lineTotal: Number(item.price || 0) * Number(item.qty || 0),
+        })),
+      }));
+
     res.json({
       meta: {
         lowStockThreshold: LOW_STOCK_THRESHOLD,
@@ -103,6 +133,7 @@ const getAdminInsights = async (req, res) => {
         orderCount: orders.length,
         totalUnitsSold,
         revenueFromLineItems,
+        totalOrderRevenue,
         totalRealizedProfit,
         blendedMarginPercent,
         lowStockCount: lowStock.length,
@@ -110,6 +141,7 @@ const getAdminInsights = async (req, res) => {
       },
       bestSellers,
       lowStock,
+      recentOrders,
       profitability: profitability.sort((a, b) => (b.realizedProfit || 0) - (a.realizedProfit || 0)),
     });
   } catch (err) {

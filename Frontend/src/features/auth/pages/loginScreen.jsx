@@ -25,15 +25,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [magicMsg, setMagicMsg] = useState('');
 
-  useEffect(() => {
-    const hasUser = Boolean(localStorage.getItem('userId') || localStorage.getItem('userEmail'));
-    if (!hasUser) return;
-    authAPI
-      .me()
-      .then(() => navigate('/home', { replace: true }))
-      .catch(() => undefined);
-  }, [navigate]);
-
   const handleChange = (e) => {
     setFormData({
       ...formData,

@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteProduct, getProducts } from '../../../shared/lib/adminApi';
+import { deleteProduct } from '../../../shared/lib/adminApi';
+import axiosInstance from '../../../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../../../utils/adminAuth';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Search } from 'lucide-react';
+import { RefreshCw, ArrowRight, Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
 const ProductsScreen = () => {
   const [products, setProducts] = useState([]);
@@ -15,9 +16,10 @@ const ProductsScreen = () => {
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter((p) => {
-      const haystack = [p.name, p.category, p.brand, p.description, p._id]
+    const productList = products || [];
+    if (!q) return productList;
+    return productList.filter((p) => {
+      const haystack = [p.name, p.category, p.brand, p.description, p.id]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -28,8 +30,9 @@ const ProductsScreen = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getProducts();
-      setProducts(data);
+      // Fetch a large limit to get all products for admin
+      const { data } = await axiosInstance.get('/api/products', { params: { limit: 1000 } });
+      setProducts(Array.isArray(data.items) ? data.items : []);
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -55,7 +58,7 @@ const ProductsScreen = () => {
         }
 
         await deleteProduct(id);
-        setProducts((prev) => prev.filter((p) => p._id !== id));
+        setProducts((prev) => prev.filter((p) => p.id !== id));
       } catch (err) {
         if (err.response?.status === 401 || err.response?.status === 403) {
           clearAdminInfo();
@@ -200,7 +203,7 @@ const ProductsScreen = () => {
                           ? (((price - cost) / price) * 100).toFixed(1)
                           : null;
                       return (
-                        <tr key={product._id}>
+                        <tr key={product.id}>
                           <td>
                             <img
                               src={product.image || 'https://via.placeholder.com/50'}
@@ -247,7 +250,7 @@ const ProductsScreen = () => {
                                 type="button"
                                 className="btn btn-icon"
                                 style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}
-                                onClick={() => navigate(`/products/${product._id}/edit`)}
+                                onClick={() => navigate(`/products/${product.id}/edit`)}
                               >
                                 <Edit2 size={16} />
                               </button>
@@ -255,7 +258,7 @@ const ProductsScreen = () => {
                                 type="button"
                                 className="btn btn-icon"
                                 style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}
-                                onClick={() => deleteHandler(product._id)}
+                                onClick={() => deleteHandler(product.id)}
                               >
                                 <Trash2 size={16} />
                               </button>

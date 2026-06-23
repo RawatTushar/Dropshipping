@@ -161,7 +161,11 @@ const Home = () => {
     totalOrders,
     totalRevenue,
   ]);
+useEffect(() => {
+  console.log("HOME MOUNT");
 
+  return () => console.log("HOME UNMOUNT");
+}, []);
   useEffect(() => {
     dispatch(fetchProducts());
     dispatch(fetchMyOrders());

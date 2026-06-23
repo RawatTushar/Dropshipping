@@ -3,7 +3,7 @@ import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-route
 import { authLogout } from '../shared/lib/adminApi';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../utils/adminAuth';
 import SplashScreen from './SplashScreen';
-import { LayoutDashboard, Package, LogOut, LayoutGrid, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Package, LogOut, LayoutGrid, Sun, Moon, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
@@ -54,6 +54,9 @@ const Layout = () => {
             <nav style={{ flex: 1 }}>
               <NavLink to="/dashboard" end className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
                 <LayoutDashboard size={20} /> Dashboard
+              </NavLink>
+              <NavLink to="/sales" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                <ShoppingBag size={20} /> Sales
               </NavLink>
               <NavLink to="/products" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
                 <Package size={20} /> Products

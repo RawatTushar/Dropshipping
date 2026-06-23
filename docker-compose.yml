@@ -32,13 +32,14 @@ services:
     env_file:
       - /opt/env/backend.env
     environment:
+      PORT: "4000"
       COOKIE_SECURE: "false"
       FRONTEND_URL: ${FRONTEND_URL:-http://16.16.115.136}
       CLIENT_URL: ${CLIENT_URL:-http://16.16.115.136/admin}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://16.16.115.136} 
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://16.16.115.136}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 20s
       timeout: 5s
       retries: 5

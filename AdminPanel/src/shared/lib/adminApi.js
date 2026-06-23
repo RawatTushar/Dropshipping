@@ -61,6 +61,11 @@ export const deleteProduct = async (id) => {
   return data;
 };
 
+export const getAdminOrders = async () => {
+  const { data } = await axiosInstance.get('/api/orders/admin/all');
+  return data;
+};
+
 export const getAdminInsights = async () => {
   const { data } = await axiosInstance.get('/api/admin/insights');
   return data;

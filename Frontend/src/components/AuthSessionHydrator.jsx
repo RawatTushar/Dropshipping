@@ -47,9 +47,6 @@ const AuthSessionHydrator = () => {
           const cached = loadUserSession();
           if (cached) {
             dispatch(setCredentials(cached));
-          } else {
-            clearUserSession();
-            dispatch(logout());
           }
         }
       } finally {
