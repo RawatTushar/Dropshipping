@@ -1,3 +1,12 @@
+/**
+ * @swagger
+ * /test:
+ *   get:
+ *     summary: Test endpoint
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 const { Op } = require("sequelize");
 const {
   Product,

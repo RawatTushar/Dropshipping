@@ -1,3 +1,12 @@
+/**
+ * @swagger
+ * /test:
+ *   get:
+ *     summary: Test endpoint
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 const mongoose = require("mongoose");
 
 const draftItemSchema = new mongoose.Schema({

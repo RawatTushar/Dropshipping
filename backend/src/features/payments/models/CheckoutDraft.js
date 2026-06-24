@@ -1,3 +1,13 @@
+
+/**
+ * @swagger
+ * /test:
+ *   get:
+ *     summary: Test endpoint
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 

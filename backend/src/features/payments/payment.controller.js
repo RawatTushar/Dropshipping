@@ -1,5 +1,14 @@
 // Stripe must not be constructed at load time with an empty key (throws).
 // const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "");
+/**
+ * @swagger
+ * /test:
+ *   get:
+ *     summary: Test endpoint
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 const Stripe = require("stripe");
 const { CheckoutDraft, CheckoutDraftItem, Order, Product } = require("../../models");
 const { createOrderWithInventory } = require("../orders/order.fulfillment");

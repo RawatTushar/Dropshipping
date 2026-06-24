@@ -1,3 +1,13 @@
+
+/**
+ * @swagger
+ * /test:
+ *   get:
+ *     summary: Test endpoint
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 const { Order, OrderItem, User } = require("../../models");
 const {
   createOrderWithInventory,

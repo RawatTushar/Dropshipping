@@ -1,3 +1,12 @@
+/**
+ * @swagger
+ * /test:
+ *   get:
+ *     summary: Test endpoint
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 const { Product, Order, OrderItem } = require("../../models");
 const { sequelize } = require("../../config/db");
 
