@@ -15,7 +15,7 @@ definition: {
 
   servers: [
     {
-      url: process.env.SWAGGER_BASE_URL || `http://localhost:${process.env.PORT || 5000}`,
+      url: process.env.SWAGGER_BASE_URL ,
     },
   ],
 
@@ -35,7 +35,7 @@ definition: {
 const swaggerSpec = swaggerJsdoc(options);
 console.log("Swagger Paths:", swaggerSpec.paths);
 function mountSwagger(app) {
-  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use("/api/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 
 module.exports = mountSwagger;
