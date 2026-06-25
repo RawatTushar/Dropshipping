@@ -105,7 +105,7 @@ const OrdersScreen = () => {
     if (!editTarget?._id) return;
     const address = editAddress.trim();
     if (address.length < 8) {
-      setEditErr('Please enter a complete delivery address (at least 8 characters).');
+      setEditErr('Please enter  complete delivery address (at least 8 characters).');
       return;
     }
     setEditBusy(true);
