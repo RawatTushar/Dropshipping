@@ -182,6 +182,7 @@ module.exports = {
   addOrderItems,
   getOrderById,
   getMyOrders,
+  getAllOrders,
   updateMyOrder,
   cancelMyOrder,
 };
