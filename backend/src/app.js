@@ -25,9 +25,7 @@ app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
 app.use(httpCache);
-app.use("/api", apiLimiter);
-app.use("/api/auth/login", authLimiter);
-app.use("/api/auth/register", registerLimiter);
+
 app.use((req, res, next) => {
   const start = Date.now();
 
@@ -53,7 +51,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/auth/login", authLimiter);
-
+app.use("/api", apiLimiter);
+app.use("/api/auth/register", registerLimiter);
 app.get(["/api", "/api/"], (req, res) => {
   res.json({
     ok: true,
