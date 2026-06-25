@@ -172,25 +172,29 @@ const ProductsScreen = () => {
               ) : null}
             </div>
 
-            {filteredProducts.length === 0 ? (
-              <div className="empty-state">
-                <Search size={48} style={{ margin: '0 auto 1.5rem', color: 'var(--border-color)' }} />
-               No products match "{query.trim()}".
-              </div>
-            ) : (
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ width: '80px' }}>Image</th>
-                      <th>Name</th>
-                      <th>Price</th>
-                      <th>Margin</th>
-                      <th>Category</th>
-                      <th>Stock</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
+{filteredProducts.length === 0 ? (
+               <div className="empty-state">
+                 <Search size={48} style={{ margin: '0 auto 1.5rem', color: 'var(--border-color)' }} />
+                No products match "{query.trim()}".
+               </div>
+             ) : (
+               <>
+                 <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                   Showing {filteredProducts.length} of {products.length} products
+                 </p>
+                 <div className="table-container">
+                   <table>
+                     <thead>
+                       <tr>
+                         <th style={{ width: '80px' }}>Image</th>
+                         <th>Name</th>
+                         <th>Price</th>
+                         <th>Margin</th>
+                         <th>Category</th>
+                         <th>Stock</th>
+                         <th style={{ textAlign: 'right' }}>Actions</th>
+                       </tr>
+                     </thead>
                   <tbody>
                     {filteredProducts.map((product) => {
                       const price = Number(product.price);
@@ -270,12 +274,15 @@ const ProductsScreen = () => {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </>
         )}
       </motion.div>
     </>
   );
+  
 };
+
 
 export default ProductsScreen;

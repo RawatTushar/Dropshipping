@@ -16,9 +16,14 @@ import {
 import { selectCartCount } from '../features/cart/cartSlice';
 import { logout, selectCurrentUserId, selectIsAuthenticated } from '../features/auth/authSlice';
 import { authAPI } from '../api/api';
-import { selectCurrentCurrency } from '../features/preferences/currencySlice';
 import { clearUserSession } from '../utils/authSession';
-import { selectOrders, selectOrdersLoading } from '../features/orders/ordersSlice';
+import { fetchProducts } from '../features/products/productsSlice';
+import {
+  fetchMyOrders,
+  selectOrders,
+  selectOrdersLoading,
+} from '../features/orders/ordersSlice';
+import { selectCurrentCurrency } from '../features/preferences/currencySlice';
 import { readSavedStoreName } from '../utils/storePreferences';
 import { getStoredThemeForUser } from '../utils/siteTheme';
 import { usePersistedSiteTheme } from '../hooks/usePersistedSiteTheme';
@@ -192,33 +197,31 @@ const DashboardLayout = ({
     };
   }, [navOpen, clearDesktopCloseTimer, isDesktop]);
 
-  const totalRevenue = useMemo(
-    () => orders.reduce((sum, order) => sum + Number(order.totalPrice || 0), 0),
-    [orders]
+  const totalRevenue = orders.reduce(
+    (sum, order) => sum + Number(order.totalPrice || 0),
+    0,
   );
-  const todayOrders = useMemo(
-    () =>
-      orders.filter((order) => {
-        const d = new Date(order.createdAt || Date.now());
-        const n = new Date();
-        return (
-          d.getDate() === n.getDate() &&
-          d.getMonth() === n.getMonth() &&
-          d.getFullYear() === n.getFullYear()
-        );
-      }).length,
-    [orders]
-  );
-  const lowStockCount = useMemo(
-    () => products.filter((p) => Number(p.countInStock || 0) <= 5).length,
-    [products]
-  );
-  const totalStockUnits = useMemo(
-    () => products.reduce((sum, p) => sum + Number(p.countInStock || 0), 0),
-    [products]
+  const todayOrders = orders.filter((order) => {
+    const d = new Date(order.createdAt || Date.now());
+    const n = new Date();
+    return (
+      d.getDate() === n.getDate() &&
+      d.getMonth() === n.getMonth() &&
+      d.getFullYear() === n.getFullYear()
+    );
+  }).length;
+  const lowStockCount = products.filter(
+    (p) => Number(p.countInStock || 0) <= 5,
+  ).length;
+  const totalStockUnits = products.reduce(
+    (sum, p) => sum + Number(p.countInStock || 0),
+    0,
   );
 
-  // Products and orders are fetched by individual pages, not here
+  useEffect(() => {
+    if (!orders.length && !ordersLoading) dispatch(fetchMyOrders());
+    if (!products.length && !productsLoading) dispatch(fetchProducts());
+  }, [dispatch, orders.length, ordersLoading, products.length, productsLoading]);
 
   const handleLogout = useCallback(async () => {
     clearStoreSplash();

@@ -132,6 +132,11 @@ const getAdminInsights = async (req, res) => {
         })),
       }));
 
+const totalInventoryValue = products.reduce(
+      (acc, p) => acc + (Number(p.countInStock || 0) * Number(p.price || 0)),
+      0
+    );
+
     res.json({
       meta: {
         lowStockThreshold: LOW_STOCK_THRESHOLD,
@@ -147,6 +152,19 @@ const getAdminInsights = async (req, res) => {
         blendedMarginPercent,
         lowStockCount: lowStock.length,
         missingCostCount,
+        totalInventoryValue,
+      },
+      summary: {
+        productCount: products.length,
+        orderCount: orders.length,
+        totalUnitsSold,
+        revenueFromLineItems,
+        totalOrderRevenue,
+        totalRealizedProfit,
+        blendedMarginPercent,
+        lowStockCount: lowStock.length,
+        missingCostCount,
+        revenueNote: 'Line-item revenue sums item price × quantity for each order item. Order-total revenue sums each order’s stored totalPrice, which may include tax or shipping. They can differ when orders were captured with different pricing, rounding, or additional fees.',
       },
       bestSellers,
       lowStock,

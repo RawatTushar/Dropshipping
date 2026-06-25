@@ -173,12 +173,26 @@ const OrdersScreen = () => {
         {!loading && !error && orders.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
             {orders.map((order) => (
-              <article key={order._id} style={{ 
+              <article  className="order-card" key={order._id} style={{ 
                 background: 'var(--bg-panel)', 
                 borderRadius: '16px', 
                 border: '1px solid var(--border-color)',
                 overflow: 'hidden',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                boxShadow:
+  theme === "dark"
+    ? "0 12px 30px rgba(0,0,0,.45)"
+    : "0 10px 28px rgba(15,23,42,.10)",
+
+border:
+  theme === "dark"
+    ? "1px solid rgba(255,255,255,.08)"
+    : "1px solid rgba(15,23,42,.08)",
+
+transition: "all .35s ease",
+
+transform: "translateZ(0)",
+
+overflow: "hidden",
               }}>
                 <div style={{ 
                   display: 'flex', 
@@ -200,6 +214,7 @@ const OrdersScreen = () => {
                         {isOrderWithinEditWindow(order) ? (
                           <button
                             type="button"
+                            className="order-btn"
                             onClick={() => openEditOrder(order)}
                             style={{
                               display: 'inline-flex',
@@ -234,6 +249,7 @@ const OrdersScreen = () => {
                         )}
                         {isOrderWithinDeleteWindow(order) ? (
                           <button
+                          className="order-btn"
                             type="button"
                             onClick={() => openCancelOrder(order)}
                             style={{

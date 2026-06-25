@@ -122,13 +122,12 @@ const DashboardScreen = () => {
             animate="show"
           >
             <motion.div variants={itemVariants} className="dashboard-kpi dashboard-kpi--accent">
-              <div className="dashboard-kpi-label">Revenue (line items)</div>
+              <div className="dashboard-kpi-label">Lifetime revenue</div>
               <div className="dashboard-kpi-value dashboard-mono">
-                {money(s?.revenueFromLineItems)}
+                {money(s?.totalOrderRevenue ?? s?.revenueFromLineItems)}
               </div>
               <div className="dashboard-kpi-hint">
                 {s?.orderCount ?? 0} orders · {s?.totalUnitsSold ?? 0} units sold
-                {s?.totalOrderRevenue != null ? ` · ${money(s.totalOrderRevenue)} order total` : ''}
               </div>
             </motion.div>
             <motion.div variants={itemVariants} className="dashboard-kpi dashboard-kpi--positive">
@@ -139,6 +138,15 @@ const DashboardScreen = () => {
               <div className="dashboard-kpi-hint">
                 Blended margin {pct(s?.blendedMarginPercent)}
                 {s?.missingCostCount > 0 ? ` · ${s.missingCostCount} SKU(s) need cost` : ''}
+              </div>
+            </motion.div>
+            <motion.div variants={itemVariants} className="dashboard-kpi dashboard-kpi--info">
+              <div className="dashboard-kpi-label">Inventory value</div>
+              <div className="dashboard-kpi-value dashboard-mono">
+                {money(s?.totalInventoryValue)}
+              </div>
+              <div className="dashboard-kpi-hint">
+                Retail value of all stock
               </div>
             </motion.div>
             <motion.div variants={itemVariants} className="dashboard-kpi dashboard-kpi--warn">

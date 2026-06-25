@@ -2,6 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { createCorsOptions } = require("./common/corsOrigins");
+const { apiLimiter } = require("./common/middleware/rateLimiter");
+const {authLimiter} = require("./common/middleware/rateLimiter");
+const {registerLimiter}= require("./common/middleware/rateLimiter");
+
 
 const authRoutes = require("./features/auth/auth.routes");
 const adminRoutes = require("./features/admin/admin.routes");
@@ -21,7 +25,9 @@ app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
 app.use(httpCache);
-
+app.use("/api", apiLimiter);
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", registerLimiter);
 app.use((req, res, next) => {
   const start = Date.now();
 
@@ -46,6 +52,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/auth/login", authLimiter);
 
 app.get(["/api", "/api/"], (req, res) => {
   res.json({

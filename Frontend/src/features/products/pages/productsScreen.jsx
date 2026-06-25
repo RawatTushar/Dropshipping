@@ -14,7 +14,7 @@ import {
 } from '../../../utils/catalogDisplay';
 import '../../../productsScreen.css';
 
-const PRODUCTS_PAGE_SIZE = 30;
+const PRODUCTS_PAGE_SIZE = 12;
 
 const ProductsScreen = () => {
   const dispatch = useDispatch();
@@ -36,26 +36,26 @@ const ProductsScreen = () => {
   useEffect(() => {
     dispatch(
       fetchProducts({
-        page: currentPage,
-        limit: PRODUCTS_PAGE_SIZE,
+        page: 1,
+        limit: 100,
         search: normalizedSearch,
-        category,
+        category: category === 'all' ? '' : category,
         minRating,
         quick,
         sort,
       }),
     );
-  }, [dispatch, currentPage, normalizedSearch, category, minRating, quick, sort]);
+  }, [dispatch, normalizedSearch, category, minRating, quick, sort]);
 
   useEffect(() => {
     const refresh = () => {
       if (document.visibilityState === 'visible') {
         dispatch(
           fetchProducts({
-            page: currentPage,
-            limit: PRODUCTS_PAGE_SIZE,
+            page: 1,
+            limit: 100,
             search: normalizedSearch,
-            category,
+            category: category === 'all' ? '' : category,
             minRating,
             quick,
             sort,
@@ -65,7 +65,7 @@ const ProductsScreen = () => {
     };
     document.addEventListener('visibilitychange', refresh);
     return () => document.removeEventListener('visibilitychange', refresh);
-  }, [dispatch, currentPage, normalizedSearch, category, minRating, quick, sort]);
+  }, [dispatch, normalizedSearch, category, minRating, quick, sort]);
 
   const rankedMatches = useMemo(() => {
     if (!normalizedSearch) return [];
@@ -102,9 +102,12 @@ const ProductsScreen = () => {
       }),
     [filteredItems, category, minRating, quick, sort],
   );
-  const totalPages = Math.max(1, Number(pagination?.totalPages || 1));
-  const totalItems = Number(pagination?.totalItems ?? displayItems.length);
-  const pagedItems = displayItems;
+  const totalPages = Math.max(1, Math.ceil(displayItems.length / PRODUCTS_PAGE_SIZE));
+  const totalItems = displayItems.length;
+  const pagedItems = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PAGE_SIZE;
+    return displayItems.slice(start, start + PRODUCTS_PAGE_SIZE);
+  }, [displayItems, currentPage]);
 
   const toggleQuick = (id) => {
     setQuick((q) => (q === id ? null : id));
@@ -431,75 +434,68 @@ const ProductsScreen = () => {
           ) : null}
         </div>
 
-        {!loading && !error && items.length > 0 ? (
-          <section className="catalog-controls" aria-label="Sort and filter catalog">
-            <div className="catalog-controls__inner">
-              <div className="catalog-controls__sort-block">
-                <div className="catalog-controls__sort-head">
-                  <span className="catalog-controls__eyebrow">Sort</span>
-                  <span className="catalog-controls__hint">How products are ordered in the grid</span>
-                </div>
-                <div className="catalog-sort-shell">
-                  <label className="visually-hidden" htmlFor="catalog-sort">
-                    Sort products by
-                  </label>
-                  <select
-                    id="catalog-sort"
-                    className="catalog-sort-select"
-                    value={sort}
-                    onChange={(e) => {
-                      setSort(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  >
-                    {SORT_OPTIONS.map((o) => (
-                      <option key={o.id} value={o.id}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+{!loading && !error && items.length > 0 ? (
+           <section className="catalog-controls" aria-label="Sort and filter catalog">
+             <div className="catalog-controls__inner">
+               <div className="catalog-controls__sort-block">
+                 <div className="catalog-controls__sort-head">
+                   <span className="catalog-controls__eyebrow">Sort</span>
+                   <span className="catalog-controls__hint">How products are ordered in the grid</span>
+                 </div>
+                 <div className="catalog-sort-shell">
+                   <label className="visually-hidden" htmlFor="catalog-sort">
+                     Sort products by
+                   </label>
+                   <select
+                     id="catalog-sort"
+                     className="catalog-sort-select"
+                     value={sort}
+                     onChange={(e) => {
+                       setSort(e.target.value);
+                       setCurrentPage(1);
+                     }}
+                   >
+                     {SORT_OPTIONS.map((o) => (
+                       <option key={o.id} value={o.id}>
+                         {o.label}
+                       </option>
+                     ))}
+                   </select>
+                 </div>
+               </div>
 
-              <div className="catalog-controls__aside">
-                <button
-                  type="button"
-                  className="catalog-filters-trigger"
-                  onClick={openFiltersModal}
-                  aria-haspopup="dialog"
-                  aria-expanded={filtersOpen}
-                >
-                  <span className="catalog-filters-trigger__icon" aria-hidden>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M4 6h16M7 12h10M10 18h4" />
-                      <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none" />
-                      <circle cx="6" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                      <circle cx="14" cy="18" r="1.5" fill="currentColor" stroke="none" />
-                    </svg>
-                  </span>
-                  <span className="catalog-filters-trigger__text">
-                    <span className="catalog-filters-trigger__title">Filters</span>
-                    <span className="catalog-filters-trigger__sub">Category, rating & deals</span>
-                  </span>
-                  {activeFilterCount > 0 ? (
-                    <span className="catalog-filters-trigger__badge" aria-label={`${activeFilterCount} active filters`}>
-                      {activeFilterCount}
-                    </span>
-                  ) : null}
-                </button>
-
-                <div className="catalog-results-stat" aria-live="polite">
-                  <span className="catalog-results-stat__value">{totalItems}</span>
-                  <span className="catalog-results-stat__label">
-                    {totalItems === 1 ? 'product' : 'products'}
-                  </span>
+               <div className="catalog-controls__aside">
+                 <button
+                   type="button"
+                   className="catalog-filters-trigger"
+                   onClick={openFiltersModal}
+                   aria-haspopup="dialog"
+                   aria-expanded={filtersOpen}
+                 >
+                   <span className="catalog-filters-trigger__icon" aria-hidden>
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                       <path d="M4 6h16M7 12h10M10 18h4" />
+                       <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                       <circle cx="6" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                       <circle cx="14" cy="18" r="1.5" fill="currentColor" stroke="none" />
+                     </svg>
+                   </span>
+                   <span className="catalog-filters-trigger__text">
+                     <span className="catalog-filters-trigger__title">Filters</span>
+                     <span className="catalog-filters-trigger__sub">Category, rating &amp; deals</span>
+                   </span>
+{activeFilterCount > 0 ? (
+                      <span className="catalog-filters-trigger__badge" aria-label={`${activeFilterCount} active filters`}>
+                        {activeFilterCount}
+                      </span>
+                    ) : null}
+                  </button>
                 </div>
               </div>
-            </div>
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        {loading ? <p>Loading products...</p> : null}
+          {loading ? <p>Loading products...</p> : null}
         {error ? <p className="catalog-error">{error}</p> : null}
 
         {!loading && !error && items.length > 0 && filteredItems.length === 0 ? (
