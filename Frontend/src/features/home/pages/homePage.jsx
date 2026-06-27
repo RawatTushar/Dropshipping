@@ -25,14 +25,7 @@ const Home = () => {
     () => authUser?.name || localStorage.getItem('userName') || ''
   );
 
-  const {
-    totalRevenue,
-    totalOrders,
-    thisMonthOrders,
-    avgOrderValue,
-    loyaltyCredits,
-    estimatedRewardsValue,
-  } = useMemo(() => {
+  const {totalRevenue,totalOrders,thisMonthOrders,avgOrderValue,loyaltyCredits,estimatedRewardsValue,} = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();

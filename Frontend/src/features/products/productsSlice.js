@@ -1,12 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { productsAPI, getApiErrorMessage } from '../../api/api';
-import { invalidateHttpCache } from '../../shared/lib/httpCache';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const { data } = await productsAPI.getAll({ ...params, force: false });
+      const { data } = await productsAPI.getAll({ ...params });
       return data;
     } catch (err) {
       return rejectWithValue(getApiErrorMessage(err, 'Failed to load products'));
@@ -54,7 +53,6 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        // Accept either an array (legacy) or a paginated object { items, page, limit, totalItems }
         if (Array.isArray(action.payload)) {
           state.items = action.payload;
           state.categories = [];

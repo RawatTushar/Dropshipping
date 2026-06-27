@@ -225,7 +225,7 @@ const completeStripeCheckout = async (req, res) => {
       return res.status(400).json({ message: "Missing session id." });
     }
 
-    const existing = await Order.findOne({ where: { stripeSessionId: sessionId } });
+    const existing = await Order.findOne({ where: { stripeSessionId: sessionId, userId: req.user.id } });
     if (existing) {
       return res.json({ order: existing, alreadyCompleted: true });
     }

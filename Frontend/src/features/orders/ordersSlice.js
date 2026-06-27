@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { getApiErrorMessage, ordersAPI } from '../../api/api';
-import { CACHE_TTL } from '../../shared/lib/httpCache';
 import { logout } from '../auth/authSlice';
 
 const getUserId = (state) =>
@@ -8,23 +7,10 @@ const getUserId = (state) =>
 
 export const fetchMyOrders = createAsyncThunk(
   'orders/fetchMyOrders',
-  async ({ force = false } = {}, { rejectWithValue, getState }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const userId = getUserId(getState());
-      const cached = getState().orders.byUser[userId];
-      const lastAt = getState().orders.lastFetchedAtByUser?.[userId];
-      const fresh =
-        !force &&
-        Array.isArray(cached) &&
-        cached.length > 0 &&
-        lastAt &&
-        Date.now() - lastAt < CACHE_TTL.orders;
-
-      if (fresh) {
-        return { userId, orders: cached };
-      }
-
-      const { data } = await ordersAPI.getAll({ force });
+      const { data } = await ordersAPI.getAll();
       return {
         userId,
         orders: data,
@@ -75,7 +61,6 @@ const ordersSlice = createSlice({
   name: 'orders',
   initialState: {
     byUser: {},
-    lastFetchedAtByUser: {},
     loading: false,
     creating: false,
     error: '',
@@ -94,7 +79,6 @@ const ordersSlice = createSlice({
         state.byUser[userId] = Array.isArray(action.payload?.orders)
           ? action.payload.orders
           : [];
-        state.lastFetchedAtByUser[userId] = Date.now();
       })
       .addCase(fetchMyOrders.rejected, (state, action) => {
         state.loading = false;
@@ -142,7 +126,6 @@ const ordersSlice = createSlice({
       })
       .addCase(logout, (state) => {
         state.byUser = {};
-        state.lastFetchedAtByUser = {};
         state.loading = false;
         state.creating = false;
         state.error = '';

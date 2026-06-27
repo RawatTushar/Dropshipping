@@ -30,7 +30,7 @@ function getDocumentTheme() {
 /** Call once before React mounts to avoid light/dark flash on first paint. */
 export function hydrateThemeFromStorage() {
   try {
-    const uid = window.localStorage.getItem('userId') || '';
+    const uid = sessionStorage.getItem('userId') || '';
     const userId = uid || 'guest';
     const t = getStoredThemeForUser(userId);
     document.documentElement.setAttribute('data-theme', t);

@@ -1,4 +1,3 @@
-import { invalidateHttpCache } from '../shared/lib/httpCache';
 import { clearAccessToken } from './authMemory';
 
 /** Old insecure storage — removed on load; JWT must only live in httpOnly cookie. */
@@ -13,31 +12,30 @@ export function purgeStoredTokens() {
 
 /** Non-sensitive profile for UI; not used for API authorization. */
 export function persistUserSession({ _id, name, email, isAdmin }) {
-  if (_id != null && _id !== '') localStorage.setItem('userId', _id);
-  if (name != null && name !== '') localStorage.setItem('userName', name);
-  if (email != null && email !== '') localStorage.setItem('userEmail', email);
-  if (isAdmin != null) localStorage.setItem('isAdmin', String(isAdmin));
+  if (_id != null && _id !== '') sessionStorage.setItem('userId', _id);
+  if (name != null && name !== '') sessionStorage.setItem('userName', name);
+  if (email != null && email !== '') sessionStorage.setItem('userEmail', email);
+  if (isAdmin != null) sessionStorage.setItem('isAdmin', String(isAdmin));
 }
 
 export function loadUserSession() {
-  const _id = localStorage.getItem('userId') || '';
-  const email = localStorage.getItem('userEmail') || '';
+  const _id = sessionStorage.getItem('userId') || '';
+  const email = sessionStorage.getItem('userEmail') || '';
   if (!_id && !email) return null;
 
   return {
     _id,
-    name: localStorage.getItem('userName') || '',
+    name: sessionStorage.getItem('userName') || '',
     email,
-    isAdmin: localStorage.getItem('isAdmin') === 'true',
+    isAdmin: sessionStorage.getItem('isAdmin') === 'true',
   };
 }
 
 export function clearUserSession() {
-  invalidateHttpCache();
   purgeStoredTokens();
   clearAccessToken();
-  localStorage.removeItem('userId');
-  localStorage.removeItem('userName');
-  localStorage.removeItem('userEmail');
-  localStorage.removeItem('isAdmin');
+  sessionStorage.removeItem('userId');
+  sessionStorage.removeItem('userName');
+  sessionStorage.removeItem('userEmail');
+  sessionStorage.removeItem('isAdmin');
 }

@@ -5,36 +5,42 @@ const { createCorsOptions } = require("./common/corsOrigins");
 const { apiLimiter } = require("./common/middleware/rateLimiter");
 const {authLimiter} = require("./common/middleware/rateLimiter");
 const {registerLimiter}= require("./common/middleware/rateLimiter");
-
-
+const {client,httpRequests,httpDuration} = require("./common/metrices/metrices");
 const authRoutes = require("./features/auth/auth.routes");
 const adminRoutes = require("./features/admin/admin.routes");
 const productRoutes = require("./features/products/product.routes");
 const orderRoutes = require("./features/orders/order.routes");
 const paymentRoutes = require("./features/payments/payment.routes");
-const httpCache = require("./common/middleware/httpCache");
 const { notFoundHandler, errorHandler } = require("./common/middleware/errorHandler");
 const mountSwagger = require("./common/docs/swagger");
 
 const app = express();
 
-app.set("trust proxy", 1);
-
 // middleware
 app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
-app.use(httpCache);
 
 app.use((req, res, next) => {
-  const start = Date.now();
+  const end = httpDuration.startTimer();
 
   res.on("finish", () => {
+    httpRequests.inc({
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode,
+    });
+
+    end({
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode,
+    });
+
     console.log({
       method: req.method,
       path: req.originalUrl,
       status: res.statusCode,
-      duration: `${Date.now() - start}ms`,
     });
   });
 
@@ -69,8 +75,9 @@ app.get(["/api", "/api/"], (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
-app.get("/health", (req, res) => {
-  res.status(200).send("OK");
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", client.register.contentType);
+  res.end(await client.register.metrics());
 });
 app.get("/", (req, res) => {
   res.send("API running");
@@ -85,4 +92,3 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 module.exports = app;
-

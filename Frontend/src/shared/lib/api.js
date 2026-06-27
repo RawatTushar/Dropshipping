@@ -1,8 +1,5 @@
 import axios from 'axios'
 import { getAccessToken } from '../../utils/authMemory'
-import { CACHE_TTL, cachedGet, invalidateHttpCache } from './httpCache'
-
-export { invalidateHttpCache }
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
@@ -58,8 +55,8 @@ export const authAPI = {
 
 // Products API calls — always fetch fresh so admin price/stock edits show on the store
 export const productsAPI = {
-  getAll: ({ page, limit, search, category, minRating, quick, sort, force = false } = {}) =>
-    cachedGet(api, '/products', {
+  getAll: ({ page, limit, search, category, minRating, quick, sort } = {}) =>
+    api.get('/products', {
       params: {
         ...(page ? { page } : {}),
         ...(limit ? { limit } : {}),
@@ -69,8 +66,6 @@ export const productsAPI = {
         ...(quick ? { quick } : {}),
         ...(sort ? { sort } : {}),
       },
-      ttlMs: CACHE_TTL.products,
-      force,
     }),
   getById: (id) => api.get(`/products/${id}`),
   /** Personalized + rule-based; pass `viewedIds` from local browse history for guests. */
@@ -79,10 +74,7 @@ export const productsAPI = {
     if (viewedIds?.length) {
       params.viewed = viewedIds.slice(0, 16).join(',')
     }
-    return cachedGet(api, `/products/${id}/recommendations`, {
-      params,
-      ttlMs: CACHE_TTL.products,
-    })
+    return api.get(`/products/${id}/recommendations`, { params })
   },
   /** Fire-and-forget: persists for logged-in users (view / cart_add). */
   trackInteraction: (productId, type) =>
@@ -94,38 +86,29 @@ export const productsAPI = {
 
 // Orders API calls
 export const ordersAPI = {
-  getAll: ({ force = false } = {}) =>
-    cachedGet(api, '/orders', { ttlMs: CACHE_TTL.orders, force }),
-  getById: (id, { force = false } = {}) =>
-    cachedGet(api, `/orders/${id}`, { ttlMs: CACHE_TTL.orders, force }),
+  getAll: () => api.get('/orders'),
+  getById: (id) => api.get(`/orders/${id}`),
   create: async (orderData) => {
     const res = await api.post('/orders', orderData)
-    invalidateHttpCache('/orders')
-    invalidateHttpCache('/products')
     return res
   },
   update: async (id, body) => {
     const res = await api.put(`/orders/${id}`, body)
-    invalidateHttpCache('/orders')
     return res
   },
   cancel: async (id) => {
     const res = await api.delete(`/orders/${id}`)
-    invalidateHttpCache('/orders')
     return res
   },
 }
 
 // Stripe / payments (card checkout uses hosted Stripe Checkout)
 export const paymentsAPI = {
-  getConfig: ({ force = false } = {}) =>
-    cachedGet(api, '/payments/config', { ttlMs: CACHE_TTL.paymentsConfig, force }),
+  getConfig: () => api.get('/payments/config'),
   createCheckoutSession: (payload) =>
     api.post('/payments/create-checkout-session', payload),
   completeStripeCheckout: async (sessionId) => {
     const res = await api.post('/payments/stripe/complete', { sessionId })
-    invalidateHttpCache('/orders')
-    invalidateHttpCache('/products')
     return res
   },
 }
