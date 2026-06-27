@@ -79,7 +79,7 @@ app.get(["/api", "/api/"], (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
-app.get("/metrics", async (req, res) => {
+app.get("/api/metrics", async (req, res) => {
   res.set("Content-Type", client.register.contentType);
   res.end(await client.register.metrics());
 });
