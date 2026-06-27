@@ -54,7 +54,7 @@ const DashboardScreen = () => {
     try {
       setLoading(true);
       setError('');
-      const data = await getAdminInsights();
+      const { data } = await getAdminInsights();
       setInsights(data);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {

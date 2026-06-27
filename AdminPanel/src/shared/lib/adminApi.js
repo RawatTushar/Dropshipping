@@ -1,9 +1,17 @@
 import axios from 'axios';
 
-/** Same origin in prod (gateway /api); Vite proxy in dev. */
-const apiBase = import.meta.env.DEV
-  ? ''
-  : (import.meta.env.VITE_API_URL ?? '');
+const DEV_API = 'http://localhost:4000';
+
+const normalizeBase = (raw) => {
+  const s = String(raw || '').trim().replace(/\/+$/, '');
+  if (!s) return import.meta.env.DEV ? DEV_API : '';
+  if (s.endsWith('/api')) return s.slice(0, -4);
+  return s;
+};
+
+const apiBase =
+  (import.meta.env.VITE_API_URL && normalizeBase(import.meta.env.VITE_API_URL)) ||
+  (import.meta.env.DEV ? DEV_API : '');
 
 export function getAdminApiErrorMessage(err, fallback = 'Request failed.') {
   const data = err.response?.data;
@@ -11,7 +19,7 @@ export function getAdminApiErrorMessage(err, fallback = 'Request failed.') {
   if (typeof data === 'string' && data.length < 500) return data;
   const msg = err.message || '';
   if (msg === 'Network Error' || err.code === 'ERR_NETWORK') {
-    return 'Cannot reach the API. Check that the backend is running and /api is proxied correctly.';
+    return 'Cannot reach the API. Start the backend and ensure VITE_API_URL or the fallback port is correct.';
   }
   return msg || fallback;
 }
@@ -36,39 +44,22 @@ export const authMe = () => axiosInstance.get('/api/auth/me');
 
 export const authLogout = () => axiosInstance.post('/api/auth/logout');
 
-export const getProducts = async () => {
-  const { data } = await axiosInstance.get('/api/products');
-  return data;
-};
+export const getProducts = async () => axiosInstance.get('/api/products');
 
-export const getProductById = async (id) => {
-  const { data } = await axiosInstance.get(`/api/products/${id}`);
-  return data;
-};
+export const getProductById = async (id) => axiosInstance.get(`/api/products/${id}`);
 
-export const createProduct = async (productData) => {
-  const { data } = await axiosInstance.post('/api/products', productData);
-  return data;
-};
+export const createProduct = async (productData) => axiosInstance.post('/api/products', productData);
 
-export const updateProduct = async (id, productData) => {
-  const { data } = await axiosInstance.put(`/api/products/${id}`, productData);
-  return data;
-};
+export const updateProduct = async (id, productData) =>
+  axiosInstance.put(`/api/products/${id}`, productData);
 
-export const deleteProduct = async (id) => {
-  const { data } = await axiosInstance.delete(`/api/products/${id}`);
-  return data;
-};
+export const deleteProduct = async (id) =>
+  axiosInstance.delete(`/api/products/${id}`);
 
-export const getAdminOrders = async () => {
-  const { data } = await axiosInstance.get('/api/orders/admin/all');
-  return data;
-};
+export const getAdminOrders = async () =>
+  axiosInstance.get('/api/orders/admin/all');
 
-export const getAdminInsights = async () => {
-  const { data } = await axiosInstance.get('/api/admin/insights');
-  return data;
-};
+export const getAdminInsights = async () =>
+  axiosInstance.get('/api/admin/insights');
 
 export default axiosInstance;

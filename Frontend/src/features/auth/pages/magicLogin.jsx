@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { authAPI, getApiErrorMessage } from '../../../api/api';
-import { setAccessToken } from '../../../utils/authMemory';
 import { persistUserSession } from '../../../utils/authSession';
 import { verifyAuthSession } from '../../../utils/verifyAuthSession';
 import { logout, setCredentials } from '../authSlice';
@@ -12,7 +11,7 @@ const MagicLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState('loading'); // loading | success | error
+  const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -27,8 +26,7 @@ const MagicLogin = () => {
     (async () => {
       try {
         const { data } = await authAPI.verifyMagicLink(email, linkToken);
-        const { _id, name, isAdmin, token } = data || {};
-        if (token) setAccessToken(token);
+        const { _id, name, isAdmin } = data || {};
         persistUserSession({ _id, name, email, isAdmin });
         dispatch(setCredentials({ _id, name, email, isAdmin }));
 
@@ -71,4 +69,3 @@ const MagicLogin = () => {
 };
 
 export default MagicLogin;
-

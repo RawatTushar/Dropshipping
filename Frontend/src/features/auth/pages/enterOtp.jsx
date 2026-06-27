@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI, getApiErrorMessage } from '../../../api/api';
-import { setAccessToken } from '../../../utils/authMemory';
 import { persistUserSession } from '../../../utils/authSession';
 import { verifyAuthSession } from '../../../utils/verifyAuthSession';
 import { logout, setCredentials } from '../authSlice';
@@ -53,8 +52,7 @@ const EnterOTP = () => {
 
     try {
       const response = await authAPI.verifyOTP({ email: email.trim(), otp });
-      const { _id, name, email: accountEmail, isAdmin, token } = response.data;
-      if (token) setAccessToken(token);
+      const { _id, name, email: accountEmail, isAdmin } = response.data;
       persistUserSession({ _id, name, email: accountEmail, isAdmin });
       dispatch(setCredentials({ _id, name, email: accountEmail, isAdmin }));
 

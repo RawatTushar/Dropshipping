@@ -11,15 +11,19 @@ const adminRoutes = require("./features/admin/admin.routes");
 const productRoutes = require("./features/products/product.routes");
 const orderRoutes = require("./features/orders/order.routes");
 const paymentRoutes = require("./features/payments/payment.routes");
+const { sessionMiddleware } = require("./common/auth/session");
 const { notFoundHandler, errorHandler } = require("./common/middleware/errorHandler");
 const mountSwagger = require("./common/docs/swagger");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // middleware
 app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
+app.use(sessionMiddleware);
 
 app.use((req, res, next) => {
   const end = httpDuration.startTimer();

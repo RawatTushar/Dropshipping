@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { goDashboardAfterAuth } from '../../../utils/goDashboardAfterAuth';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../../../api/api';
-import { setAccessToken } from '../../../utils/authMemory';
 import { persistUserSession } from '../../../utils/authSession';
 import { verifyAuthSession } from '../../../utils/verifyAuthSession';
 import { logout, setCredentials } from '../authSlice';
@@ -20,15 +19,17 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    rememberMe: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [magicMsg, setMagicMsg] = useState('');
 
   const handleChange = (e) => {
+    const { name, type, checked, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === 'checkbox' ? checked : value,
     });
     if (error) setError('');
   };
@@ -46,8 +47,7 @@ const Login = () => {
         return;
       }
 
-      const { _id, name, email, isAdmin, token } = response.data;
-      if (token) setAccessToken(token);
+      const { _id, name, email, isAdmin } = response.data;
       persistUserSession({ _id, name, email, isAdmin });
       dispatch(setCredentials({ _id, name, email, isAdmin }));
 
@@ -58,7 +58,6 @@ const Login = () => {
         return;
       }
       
-      console.log('Login successful, session verified');
       goDashboardAfterAuth(navigate);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -90,6 +89,19 @@ const Login = () => {
           placeholder="Your password"
           label="Password"
         />
+
+        <div className="remember-me-row">
+          <label className="remember-me-label">
+            <input
+              type="checkbox"
+              name="rememberMe"
+              checked={formData.rememberMe}
+              onChange={handleChange}
+              className="remember-me-checkbox"
+            />
+            Remember me
+          </label>
+        </div>
 
         <SaveButton
           onClick={handleSubmit}

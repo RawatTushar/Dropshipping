@@ -43,7 +43,7 @@ const SalesScreen = () => {
     try {
       setLoading(true);
       setError('');
-      const data = await getAdminOrders();
+      const { data } = await getAdminOrders();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {

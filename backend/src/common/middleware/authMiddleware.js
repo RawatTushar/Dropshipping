@@ -1,39 +1,19 @@
-const jwt = require("jsonwebtoken");
 const { User } = require("../../models");
-const { readAuthCookieToken } = require("../auth/authCookies");
 
 const protect = async (req, res, next) => {
-  let token;
-  if (req.headers.authorization?.startsWith("Bearer ")) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ["password"] },
-      });
-      if (!req.user) {
-        return res.status(401).json({ message: "Not authorized" });
-      }
-      next();
-    } catch {
-      return res.status(401).json({ message: "Not authorized, token failed" });
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Not authorized, no session" });
     }
-  } else {
-    // fallback to httpOnly cookie
-    token = readAuthCookieToken(req);
-    if (!token) return res.status(401).json({ message: "Not authorized, no token" });
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ["password"] },
-      });
-      if (!req.user) {
-        return res.status(401).json({ message: "Not authorized" });
-      }
-      next();
-    } catch {
-      return res.status(401).json({ message: "Not authorized, token failed" });
+    req.user = await User.findByPk(req.session.userId, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized, user not found" });
     }
+    next();
+  } catch {
+    return res.status(401).json({ message: "Not authorized" });
   }
 };
 
@@ -45,24 +25,16 @@ const admin = (req, res, next) => {
   }
 };
 
-/** Attaches `req.user` when a valid Bearer token is present; otherwise continues as guest. */
 const optionalAuth = async (req, res, next) => {
   req.user = null;
-  let token = "";
-  if (req.headers.authorization?.startsWith("Bearer ")) {
-    token = req.headers.authorization.split(" ")[1];
-  } else {
-    token = readAuthCookieToken(req);
-  }
-  if (!token) return next();
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id, {
-      attributes: { exclude: ["password"] },
-    });
-    if (user) req.user = user;
-  } catch {
-    /* invalid or expired token — treat as guest */
+  if (req.session?.userId) {
+    try {
+      req.user = await User.findByPk(req.session.userId, {
+        attributes: { exclude: ["password"] },
+      });
+    } catch {
+      /* invalid session — treat as guest */
+    }
   }
   return next();
 };
