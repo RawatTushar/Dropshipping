@@ -45,6 +45,7 @@ function isOrderWithinDeleteWindow(order) {
 const OrdersScreen = () => {
   const dispatch = useDispatch();
   const orders = useSelector(selectOrders);
+  console.log("orderssss:",orders)
   const currency = useSelector(selectCurrentCurrency);
   const loading = useSelector(selectOrdersLoading);
   const error = useSelector(selectOrdersError);
@@ -101,8 +102,8 @@ const OrdersScreen = () => {
     setEditErr('');
   };
 
-  const onSaveEditOrder = async () => {
-    if (!editTarget?._id) return;
+const onSaveEditOrder = async () => {
+    if (!editTarget?.id) return;
     const address = editAddress.trim();
     if (address.length < 8) {
       setEditErr('Please enter  complete delivery address (at least 8 characters).');
@@ -112,7 +113,7 @@ const OrdersScreen = () => {
     setEditErr('');
     const result = await dispatch(
       updateOrder({
-        orderId: editTarget._id,
+        orderId: editTarget.id,
         shippingAddress: {
           address,
           city: editCity.trim(),
@@ -124,25 +125,27 @@ const OrdersScreen = () => {
     setEditBusy(false);
     if (updateOrder.fulfilled.match(result)) {
       setEditTarget(null);
+      dispatch(fetchMyOrders());
       return;
     }
     setEditErr(result.payload || 'Could not update this order.');
   };
 
-  const onConfirmCancelOrder = async () => {
-    if (!cancelTarget?._id) return;
+const onConfirmCancelOrder = async () => {
+    if (!cancelTarget?.id) return;
     if (cancelPhrase.trim() !== CANCEL_CONFIRM_PHRASE) {
       setCancelErr(`Type ${CANCEL_CONFIRM_PHRASE} exactly to confirm.`);
       return;
     }
     setCancelBusy(true);
     setCancelErr('');
-    const result = await dispatch(cancelOrder(cancelTarget._id));
+    const result = await dispatch(cancelOrder(cancelTarget.id));
     console.log("resultttt cancel",result)
     setCancelBusy(false);
     if (cancelOrder.fulfilled.match(result)) {
       setCancelTarget(null);
       setCancelPhrase('');
+      dispatch(fetchMyOrders());
       return;
     }
     setCancelErr(result.payload || 'Could not cancel this order.');
@@ -173,7 +176,7 @@ const OrdersScreen = () => {
         {!loading && !error && orders.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
             {orders.map((order) => (
-              <article  className="order-card" key={order._id} style={{ 
+              <article  className="order-card" key={order.id} style={{ 
                 background: 'var(--bg-panel)', 
                 borderRadius: '16px', 
                 border: '1px solid var(--border-color)',
@@ -206,7 +209,7 @@ overflow: "hidden",
                 }}>
                   <div>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Order ID</span>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'monospace', fontWeight: 700 }}>#{String(order._id || '').slice(-8).toUpperCase()}</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'monospace', fontWeight: 700 }}>#{String(order.id || '').slice(-8).toUpperCase()}</h3>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                     {!order.isDelivered ? (
@@ -300,7 +303,7 @@ overflow: "hidden",
 
                 <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--bg-hover)' }}>
                   <Truck size={18} style={{ color: 'var(--primary)' }} />
-                  <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-main)' }}>Delivery to: {order.shippingAddress?.address || 'Standard Address'}</span>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-main)' }}>Delivery to: {order.shippingAddress || 'Standard Address'}</span>
                   <span
                     className="order-track-status order-track-status--confirmed"
                     style={{
@@ -320,7 +323,7 @@ overflow: "hidden",
 
                 <div style={{ padding: '0.5rem 1.5rem' }}>
                   {(order.orderItems || []).map((item) => (
-                    <div key={`${order._id}-${item.product || item._id}`} style={{ 
+                    <div key={`${order.id}-${item.product || item.id}`} style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '1.25rem', 
@@ -368,7 +371,7 @@ overflow: "hidden",
           <div className="order-edit-modal">
             <p className="order-cancel-modal__hint" style={{ marginTop: 0 }}>
               You can update the delivery address for order{' '}
-              <strong>#{String(editTarget._id || '').slice(-8).toUpperCase()}</strong> within 24 hours of
+              <strong>#{String(editTarget.id || '').slice(-8).toUpperCase()}</strong> within 24 hours of
               placing it.
             </p>
             <div className="order-edit-modal__field">
@@ -455,7 +458,7 @@ overflow: "hidden",
           <div className="order-cancel-modal">
             <p className="order-cancel-modal__warn">
               This will permanently remove order{' '}
-              <strong>#{String(cancelTarget._id || '').slice(-8).toUpperCase()}</strong> from your history.
+              <strong>#{String(cancelTarget.id || '').slice(-8).toUpperCase()}</strong> from your history.
              
             </p>
             <p className="order-cancel-modal__hint">
@@ -502,7 +505,7 @@ overflow: "hidden",
               <img src={activeModalItem.image} alt={activeModalItem.name} style={{ width: '120px', height: '120px', borderRadius: '12px', objectFit: 'cover', background: 'var(--bg-hover)' }} />
               <div>
                 <h4 style={{ fontSize: '1.1rem', margin: '0 0 0.5rem 0' }}>Order Item Details</h4>
-                <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}><strong>Item ID:</strong> {activeModalItem.product || activeModalItem._id}</p>
+                <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}><strong>Item ID:</strong> {activeModalItem.product || activeModalItem.id}</p>
                 <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}><strong>Unit Price:</strong> {formatCurrencyFromUSD(activeModalItem.price, currency)}</p>
                 <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}><strong>Total for this item:</strong> {formatCurrencyFromUSD(activeModalItem.price * activeModalItem.qty, currency)}</p>
               </div>
