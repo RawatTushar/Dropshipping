@@ -6,16 +6,16 @@ pipeline {
         AWS_ACCOUNT_ID = "551656632415"
 
         ECR_BACKEND = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dropshipping-backend"
-        ECR_FRONTEND = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dropshipping-frontend"
-        ECR_ADMIN = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dropshipping-admin"
 
         IMAGE_TAG = "latest"
 
         ECS_CLUSTER = "dropshipping-ecs"
-
         BACKEND_SERVICE = "backend-service"
-        FRONTEND_SERVICE = "frontend-service"
-        ADMIN_SERVICE = "admin-service"
+
+        CLOUDFRONT_DISTRIBUTION = "EU2GD4RRXDM86"
+
+        FRONTEND_BUCKET = "dropshipping-frontend"
+        ADMIN_BUCKET = "dropshipping-admin"
 
         ALB_URL = "http://dropshipping-alb-986894571.eu-north-1.elb.amazonaws.com"
     }
@@ -29,12 +29,10 @@ pipeline {
             }
         }
 
-        stage('Build Images') {
+        stage('Build Backend') {
             steps {
                 sh '''
                 docker build -t dropshipping-backend ./backend
-                docker build -t dropshipping-frontend ./Frontend
-                docker build -t dropshipping-admin ./AdminPanel
                 '''
             }
         }
@@ -51,43 +49,71 @@ pipeline {
             }
         }
 
-        stage('Tag Images') {
+        stage('Push Backend') {
             steps {
                 sh '''
                 docker tag dropshipping-backend:${IMAGE_TAG} ${ECR_BACKEND}:${IMAGE_TAG}
-                docker tag dropshipping-frontend:${IMAGE_TAG} ${ECR_FRONTEND}:${IMAGE_TAG}
-                docker tag dropshipping-admin:${IMAGE_TAG} ${ECR_ADMIN}:${IMAGE_TAG}
-                '''
-            }
-        }
 
-        stage('Push Images') {
-            steps {
-                sh '''
                 docker push ${ECR_BACKEND}:${IMAGE_TAG}
-                docker push ${ECR_FRONTEND}:${IMAGE_TAG}
-                docker push ${ECR_ADMIN}:${IMAGE_TAG}
                 '''
             }
         }
 
-        stage('Deploy ECS') {
+        stage('Deploy Backend ECS') {
             steps {
                 sh '''
                 aws ecs update-service \
                     --cluster $ECS_CLUSTER \
                     --service $BACKEND_SERVICE \
                     --force-new-deployment
+                '''
+            }
+        }
 
-                aws ecs update-service \
-                    --cluster $ECS_CLUSTER \
-                    --service $FRONTEND_SERVICE \
-                    --force-new-deployment
+        stage('Build Frontend') {
+            steps {
+                dir('Frontend') {
+                    sh '''
+                    npm ci
+                    npm run build
+                    '''
+                }
+            }
+        }
 
-                aws ecs update-service \
-                    --cluster $ECS_CLUSTER \
-                    --service $ADMIN_SERVICE \
-                    --force-new-deployment
+        stage('Upload Frontend') {
+            steps {
+                sh '''
+                aws s3 sync Frontend/dist/ s3://${FRONTEND_BUCKET} --delete
+                '''
+            }
+        }
+
+        stage('Build Admin') {
+            steps {
+                dir('AdminPanel') {
+                    sh '''
+                    npm ci
+                    npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Upload Admin') {
+            steps {
+                sh '''
+                aws s3 sync AdminPanel/dist/ s3://${ADMIN_BUCKET} --delete
+                '''
+            }
+        }
+
+        stage('Invalidate CloudFront') {
+            steps {
+                sh '''
+                aws cloudfront create-invalidation \
+                --distribution-id ${CLOUDFRONT_DISTRIBUTION} \
+                --paths "/*"
                 '''
             }
         }
@@ -95,11 +121,11 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                sleep 60
+                sleep 30
 
                 curl --retry 10 \
-                     --retry-delay 10 \
-                     -f $ALB_URL
+                     --retry-delay 5 \
+                     -f $ALB_URL/api/health || true
                 '''
             }
         }

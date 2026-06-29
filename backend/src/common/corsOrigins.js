@@ -6,6 +6,7 @@ function buildAllowedOrigins() {
     process.env.CORS_ORIGIN,
     "http://localhost",
     "http://dropshipping-alb-986894571.eu-north-1.elb.amazonaws.com/",
+    "https://d2nkmjxm0c6wcn.cloudfront.net",
     "http://localhost:5173",
     "http://localhost:3001",
     "http://localhost:3002",
