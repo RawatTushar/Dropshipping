@@ -69,17 +69,17 @@ pipeline {
                 '''
             }
         }
-
-        stage('Build Frontend') {
-            steps {
-                dir('Frontend') {
-                    sh '''
-                    npm ci
-                    npm run build
-                    '''
-                }
-            }
+stage('Build Frontend') {
+    steps {
+        dir('Frontend') {
+            sh '''
+            npm cache clean --force
+            npm ci
+            npm run build
+            '''
         }
+    }
+}
 
         stage('Upload Frontend') {
             steps {
@@ -89,16 +89,17 @@ pipeline {
             }
         }
 
-        stage('Build Admin') {
-            steps {
-                dir('AdminPanel') {
-                    sh '''
-                    npm ci
-                    npm run build
-                    '''
-                }
-            }
+    stage('Build Admin') {
+    steps {
+        dir('AdminPanel') {
+            sh '''
+            npm cache clean --force
+            npm ci
+            npm run build
+            '''
         }
+    }
+}
 
         stage('Upload Admin') {
             steps {
