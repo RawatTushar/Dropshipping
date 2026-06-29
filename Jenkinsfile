@@ -75,7 +75,7 @@ stage('Build Frontend') {
             sh '''
             export npm_config_cache=/tmp/npm-cache
             mkdir -p /tmp/npm-cache
-            npm ci
+            npm install
             npm run build
             '''
         }
@@ -97,7 +97,7 @@ stage('Build Frontend') {
             sh '''
             export npm_config_cache=/tmp/npm-cache
             mkdir -p /tmp/npm-cache
-            npm ci
+            npm install
             npm run build
             '''
         }
