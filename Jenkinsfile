@@ -73,13 +73,15 @@ stage('Build Frontend') {
     steps {
         dir('Frontend') {
             sh '''
-            npm cache clean --force
+            export npm_config_cache=/tmp/npm-cache
+            mkdir -p /tmp/npm-cache
             npm ci
             npm run build
             '''
         }
     }
 }
+
 
         stage('Upload Frontend') {
             steps {
@@ -89,11 +91,12 @@ stage('Build Frontend') {
             }
         }
 
-    stage('Build Admin') {
+   stage('Build Admin') {
     steps {
         dir('AdminPanel') {
             sh '''
-            npm cache clean --force
+            export npm_config_cache=/tmp/npm-cache
+            mkdir -p /tmp/npm-cache
             npm ci
             npm run build
             '''
