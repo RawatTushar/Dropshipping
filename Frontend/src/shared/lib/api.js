@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getAccessToken } from '../../utils/authMemory'
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+  import.meta.env.VITE_API_URL || '/api'
 
 /** Readable message for failed axios calls (network vs API JSON body). */
 export function getApiErrorMessage(err, fallback = 'Something went wrong.') {
