@@ -49,7 +49,7 @@ const ProductsScreen = () => {
   }, [fetchProducts]);
 
   const deleteHandler = async (id) => {
-    if (window.confirm('Are you sure you want to delete This product?')) {
+    if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         if (!isAdminUser(getAdminInfo())) {
           alert('Please login first as an admin to perform this action.');
