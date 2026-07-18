@@ -15,8 +15,9 @@ phases:
 
   build:
     commands:
-      - 'docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG ./backend'
-      - 'docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG'
+     - cd Backend
+     - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+     - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 
   post_build:
     commands:
