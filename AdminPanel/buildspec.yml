@@ -25,9 +25,7 @@ phases:
       - aws s3 sync dist/ s3://$ADMIN_BUCKET --delete
 
       - echo "Invalidating CloudFront..."
-      - aws cloudfront create-invalidation \
-          --distribution-id $CLOUDFRONT_DISTRIBUTION \
-          --paths "/*"
+      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION --paths "/*"
 
 artifacts:
   files:

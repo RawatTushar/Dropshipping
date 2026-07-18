@@ -24,10 +24,10 @@ phases:
       - echo "Uploading to S3..."
       - aws s3 sync dist/ s3://$FRONTEND_BUCKET --delete
 
+      - echo "CloudFront Distribution: $CLOUDFRONT_DISTRIBUTION"
+
       - echo "Invalidating CloudFront..."
-      - aws cloudfront create-invalidation \
-          --distribution-id $CLOUDFRONT_DISTRIBUTION \
-          --paths "/*"
+      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION" --paths "/*"
 
 artifacts:
   files:
