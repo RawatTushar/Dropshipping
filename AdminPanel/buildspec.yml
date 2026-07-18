@@ -1,0 +1,34 @@
+version: 0.2
+
+env:
+  variables:
+    ADMIN_BUCKET: "dropshipping-admin"
+    CLOUDFRONT_DISTRIBUTION: "EU2GD4RRXDM86"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Installing dependencies..."
+      - cd AdminPanel
+      - npm ci
+
+  build:
+    commands:
+      - echo "Building admin panel..."
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "Uploading to S3..."
+      - aws s3 sync dist/ s3://$ADMIN_BUCKET --delete
+
+      - echo "Invalidating CloudFront..."
+      - aws cloudfront create-invalidation \
+          --distribution-id $CLOUDFRONT_DISTRIBUTION \
+          --paths "/*"
+
+artifacts:
+  files:
+    - '**/*'
