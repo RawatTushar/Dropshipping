@@ -32,6 +32,12 @@ jobs:
             admin:
               - 'AdminPanel/**'
 
+      - name: Print results
+        run: |
+          echo "Frontend: ${{ steps.filter.outputs.frontend }}"
+          echo "Backend: ${{ steps.filter.outputs.backend }}"
+          echo "Admin: ${{ steps.filter.outputs.admin }}"
+
   frontend:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
