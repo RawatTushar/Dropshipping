@@ -3,7 +3,7 @@ name: Trigger AWS CodePipelines
 on:
   push:
     branches:
-      - main
+      - codepipeline
 
 jobs:
   changes:
@@ -28,9 +28,9 @@ jobs:
             frontend:
               - 'Frontend/**'
             backend:
-              - 'Backend/**'
+              - 'backend/**'
             admin:
-              - 'Admin/**'
+              - 'AdminPanel/**'
 
   frontend:
     needs: changes
@@ -43,12 +43,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: eu-north-1
 
       - name: Trigger Frontend Pipeline
         run: |
           aws codepipeline start-pipeline-execution \
-            --name FrontendPipeline
+            --name dropshipping-frontend
 
   backend:
     needs: changes
@@ -61,12 +61,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: eu-north-1
 
       - name: Trigger Backend Pipeline
         run: |
           aws codepipeline start-pipeline-execution \
-            --name BackendPipeline
+            --name dropshipping-pipeline
 
   admin:
     needs: changes
@@ -79,9 +79,9 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: eu-north-1
 
       - name: Trigger Admin Pipeline
         run: |
           aws codepipeline start-pipeline-execution \
-            --name AdminPipeline
+            --name dropshipping-admin
