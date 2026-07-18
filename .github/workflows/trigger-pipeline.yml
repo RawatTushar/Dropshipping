@@ -24,6 +24,8 @@ jobs:
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ github.event.before }}
+          ref: ${{ github.sha }}
           filters: |
             frontend:
               - 'Frontend/**'
@@ -31,6 +33,7 @@ jobs:
               - 'backend/**'
             admin:
               - 'AdminPanel/**'
+
 
       - name: Print results
         run: |
