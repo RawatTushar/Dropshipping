@@ -99,7 +99,7 @@ const Login = () => {
               onChange={handleChange}
               className="remember-me-checkbox"
             />
-            remember me
+          REMEMBER ME
           </label>
         </div>
 
