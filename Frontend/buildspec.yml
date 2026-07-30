@@ -26,7 +26,9 @@ phases:
     commands:
       - echo "Uploading to Primary S3..."
       - aws s3 sync dist/ s3://$FRONTEND_BUCKET --delete
-
+      - echo "Invalidating CloudFront..."
+      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION" --paths "/*"
+      
       - |
           echo "Assuming DR Deployment Role..."
 
@@ -44,9 +46,7 @@ phases:
           echo "Uploading to DR Bucket..."
           aws s3 sync dist/ s3://$DR_BUCKET --delete
 
-      - echo "Invalidating CloudFront..."
-      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION" --paths "/*"
-
+     
 artifacts:
   files:
     - '**/*'
