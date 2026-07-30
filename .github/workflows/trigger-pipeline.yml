@@ -3,7 +3,7 @@ name: Trigger AWS CodePipelines
 on:
   push:
     branches:
-      - master
+      - codepipeline
 
 jobs:
   changes:
