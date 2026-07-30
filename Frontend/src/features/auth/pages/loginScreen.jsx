@@ -60,7 +60,7 @@ const Login = () => {
       
       goDashboardAfterAuth(navigate);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || 'Login Failed. Please try again.');
     } finally {
       setLoading(false);
     }
