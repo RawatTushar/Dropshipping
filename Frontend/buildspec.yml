@@ -3,7 +3,10 @@ version: 0.2
 env:
   variables:
     FRONTEND_BUCKET: "dropshipping-frontend"
+    DR_BUCKET: "tushar-frontend-disaster"
+    DR_ROLE_ARN: "arn:aws:iam::060868582714:role/FrontendDRDeploymentRole"
     CLOUDFRONT_DISTRIBUTION: "EU2GD4RRXDM86"
+    DR_REGION: "ap-south-1"
 
 phases:
   install:
@@ -11,6 +14,7 @@ phases:
       nodejs: 22
     commands:
       - echo "Installing dependencies..."
+      - yum install -y jq
       - cd Frontend
       - npm ci
 
@@ -21,13 +25,29 @@ phases:
 
   post_build:
     commands:
-      - echo "Uploading to S3..."
+      - echo "Uploading to Primary S3..."
       - aws s3 sync dist/ s3://$FRONTEND_BUCKET --delete
 
-      - 'echo "CloudFront Distribution: $CLOUDFRONT_DISTRIBUTION"'
+      - echo "Assuming DR Deployment Role..."
+      - |
+        CREDS=$(aws sts assume-role \
+          --role-arn "$DR_ROLE_ARN" \
+          --role-session-name frontend-dr)
+
+        export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r '.Credentials.AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r '.Credentials.SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r '.Credentials.SessionToken')
+        export AWS_DEFAULT_REGION=$DR_REGION
+
+      - echo "Uploading to DR Bucket..."
+      - aws s3 sync dist/ s3://$DR_BUCKET --delete
+
+      - echo "CloudFront Distribution: $CLOUDFRONT_DISTRIBUTION"
 
       - echo "Invalidating CloudFront..."
-      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION" --paths "/*"
+      - aws cloudfront create-invalidation \
+          --distribution-id "$CLOUDFRONT_DISTRIBUTION" \
+          --paths "/*"
 
 artifacts:
   files:
