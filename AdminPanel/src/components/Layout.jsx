@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { clearAdminInfo, getAdminInfo, isAdminUser } from '../utils/adminAuth';
 import SplashScreen from './SplashScreen';
 import { LayoutDashboard, Package, LogOut, LayoutGrid, Sun, Moon } from 'lucide-react';
@@ -19,11 +19,17 @@ const Layout = () => {
   }, [theme]);
 
   useEffect(() => {
-    if (isAuthorized && !sessionStorage.getItem('splashShown')) {
-      setShowSplash(true);
-      sessionStorage.setItem('splashShown', 'true');
+    if (!isAuthorized) {
+      clearAdminInfo();
+      navigate('/login');
+    } else {
+      // Show splash only once per session
+      if (!sessionStorage.getItem('splashShown')) {
+        setShowSplash(true);
+        sessionStorage.setItem('splashShown', 'true');
+      }
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, navigate]);
 
   const logoutHandler = () => {
     clearAdminInfo();
@@ -32,7 +38,7 @@ const Layout = () => {
   };
 
   if (!isAuthorized) {
-    return <Navigate to="/login" replace />;
+    return null;
   }
 
   return (
@@ -46,7 +52,7 @@ const Layout = () => {
               <span><LayoutGrid size={20} strokeWidth={2.5}/></span> Admin
             </div>
             <nav style={{ flex: 1 }}>
-              <NavLink to="/dashboard" end className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+              <NavLink to="/" end className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
                 <LayoutDashboard size={20} /> Dashboard
               </NavLink>
               <NavLink to="/products" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
