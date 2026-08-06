@@ -39,6 +39,11 @@ app.get("/", (req, res) => {
 app.get("/home", (req, res) => {
   res.send("Welcome to the Dropshipping API");
 });
-
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "UP",
+    service: "backend",
+  });
+});
 module.exports = app;
 
